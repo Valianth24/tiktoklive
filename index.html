@@ -35,6 +35,17 @@
     }
 
     #gameCanvas { display: block; width: 100vw; height: 100vh; }
+
+    #youtubePlayer {
+      position: fixed;
+      left: -260px;
+      top: -260px;
+      width: 220px;
+      height: 220px;
+      opacity: 0.01;
+      pointer-events: none;
+      z-index: -1;
+    }
     .hud { position: fixed; inset: 0; pointer-events: none; }
 
     .glass {
@@ -332,6 +343,7 @@
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
+  <div id="youtubePlayer"></div>
 
   <div class="hud">
     <div class="topMini glass">
@@ -346,7 +358,7 @@
         <select id="giftSelect"></select>
         <input id="activePointInput" type="number" min="1" max="1000" step="1" value="1" />
         <button id="fullscreenBtn" class="secondary">Tam Ekran</button>
-        <button id="audioUnlockBtn" class="secondary">Ses Aç</button>
+        <button id="audioUnlockBtn" class="secondary">Müzik Aç</button>
       </div>
       <div id="teamGrid" class="teamGrid"></div>
     </section>
@@ -382,6 +394,10 @@
     let raceNumber = 1;
     let audioUnlocked = false;
     let activeAnthemCode = null;
+    let youtubeApiLoading = false;
+    let youtubeReady = false;
+    let youtubePlayer = null;
+    let pendingYoutubeTeamCode = null;
 
     const anthemAudio = {};
     const giftImages = {};
@@ -441,13 +457,26 @@
       KURD: 'Heart Me'
     };
 
-    const ANTHEM_URLS = {
-      TR: 'assets/anthems/tr.mp3',
-      AZ: 'assets/anthems/az.mp3',
-      SYR: 'assets/anthems/syr.mp3',
-      AFG: 'assets/anthems/afg.mp3',
-      TKM: 'assets/anthems/tkm.mp3',
-      KURD: 'assets/anthems/kurd.mp3'
+    const USE_YOUTUBE_MUSIC = true;
+
+    const TEAM_YOUTUBE_IDS = {
+      // İnternetten çalar. Video ID'leri istersen sonradan sadece buradan değiştirirsin.
+      TR: '7VG5HU9U4QY',      // Mehter / hücum tarzı
+      KURD: 'uO5n1l2GvIc',    // Davul-zurna / halay tarzı
+      AZ: 'E-F4ct7t0kw',      // Azerbaycan enstrümantal tarzı
+      SYR: 'WDqH-fFOLvQ',     // Davul-zurna hareketli tarz
+      AFG: 'uO5n1l2GvIc',     // Geçici hareketli ritim
+      TKM: 'tayQ3owTkDE'      // Geçici hareketli ritim
+    };
+
+    const TEAM_MUSIC_URLS = {
+      // USE_YOUTUBE_MUSIC false yapılırsa bu direkt MP3 linkleri kullanılır.
+      TR: 'assets/music/turkiye-mehter.mp3',
+      KURD: 'assets/music/kurdistan-davul-zurna.mp3',
+      AZ: 'assets/music/azerbaycan-race.mp3',
+      SYR: 'assets/music/suriye-race.mp3',
+      AFG: 'assets/music/afganistan-race.mp3',
+      TKM: 'assets/music/turkmenistan-race.mp3'
     };
 
     const teams = [
@@ -485,13 +514,16 @@
         giftImages[gift.name] = img;
       });
 
-      Object.entries(ANTHEM_URLS).forEach(([code, url]) => {
-        const audio = new Audio(url);
-        audio.loop = true;
-        audio.volume = 0.42;
-        audio.preload = 'auto';
-        anthemAudio[code] = audio;
-      });
+      if (!USE_YOUTUBE_MUSIC) {
+        Object.entries(TEAM_MUSIC_URLS).forEach(([code, url]) => {
+          const audio = new Audio(url);
+          audio.loop = true;
+          audio.volume = 0.42;
+          audio.preload = 'auto';
+          audio.onerror = () => { audio.dataset.failed = '1'; };
+          anthemAudio[code] = audio;
+        });
+      }
     }
 
     function resize() {
@@ -837,6 +869,16 @@
     function unlockAudio() {
       if (audioUnlocked) return;
       audioUnlocked = true;
+
+      const btn = document.getElementById('audioUnlockBtn');
+      if (btn) btn.textContent = 'Müzik Açık';
+
+      if (USE_YOUTUBE_MUSIC) {
+        loadYouTubeMusicPlayer();
+        setTimeout(updateAnthem, 500);
+        return;
+      }
+
       Object.values(anthemAudio).forEach(audio => {
         audio.volume = 0;
         audio.play().then(() => {
@@ -845,8 +887,7 @@
           audio.volume = 0.42;
         }).catch(() => { audio.volume = 0.42; });
       });
-      const btn = document.getElementById('audioUnlockBtn');
-      if (btn) btn.textContent = 'Ses Açık';
+
       setTimeout(updateAnthem, 120);
     }
 
@@ -855,6 +896,12 @@
       const leader = getLeader();
       if (!leader || activeAnthemCode === leader.code) return;
       activeAnthemCode = leader.code;
+
+      if (USE_YOUTUBE_MUSIC) {
+        playTeamYoutubeMusic(leader.code);
+        return;
+      }
+
       Object.entries(anthemAudio).forEach(([code, audio]) => {
         if (code !== leader.code) {
           audio.pause();
@@ -863,9 +910,73 @@
       });
       const active = anthemAudio[leader.code];
       if (active) {
+        if (active.dataset.failed === '1') {
+          showCenterMessage('Müzik dosyası yok', TEAM_MUSIC_URLS[leader.code] + ' bulunamadı.', 3600);
+          return;
+        }
         active.volume = 0.42;
         active.loop = true;
-        active.play().catch(() => {});
+        active.play().catch(() => {
+          showCenterMessage('Müzik başlatılamadı', 'Mobilde önce Müzik Aç butonuna bir kez basman gerekiyor.', 3600);
+        });
+      }
+    }
+
+    function loadYouTubeMusicPlayer() {
+      if (!USE_YOUTUBE_MUSIC) return;
+      if (youtubePlayer || youtubeApiLoading) return;
+
+      youtubeApiLoading = true;
+      window.onYouTubeIframeAPIReady = function() {
+        youtubePlayer = new YT.Player('youtubePlayer', {
+          width: 220,
+          height: 220,
+          videoId: TEAM_YOUTUBE_IDS.TR,
+          playerVars: {
+            playsinline: 1,
+            controls: 0,
+            rel: 0,
+            modestbranding: 1,
+            disablekb: 1,
+            fs: 0
+          },
+          events: {
+            onReady: function(event) {
+              youtubeReady = true;
+              try { event.target.setVolume(46); } catch (e) {}
+              if (pendingYoutubeTeamCode) playTeamYoutubeMusic(pendingYoutubeTeamCode, true);
+            },
+            onError: function() {
+              showCenterMessage('YouTube müziği açılamadı', 'Video sahibi embed izni vermemiş olabilir. Video ID değiştir.', 4200);
+            },
+            onStateChange: function(event) {
+              if (event.data === YT.PlayerState.ENDED && activeAnthemCode) {
+                playTeamYoutubeMusic(activeAnthemCode, true);
+              }
+            }
+          }
+        });
+      };
+
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
+    }
+
+    function playTeamYoutubeMusic(teamCode, force) {
+      pendingYoutubeTeamCode = teamCode;
+      loadYouTubeMusicPlayer();
+
+      if (!youtubeReady || !youtubePlayer || !youtubePlayer.loadVideoById) return;
+
+      const videoId = TEAM_YOUTUBE_IDS[teamCode] || TEAM_YOUTUBE_IDS.TR;
+
+      try {
+        youtubePlayer.loadVideoById({ videoId: videoId, startSeconds: 0 });
+        youtubePlayer.setVolume(46);
+        youtubePlayer.playVideo();
+      } catch (err) {
+        showCenterMessage('Müzik başlatılamadı', 'Müzik Aç butonuna tekrar basmayı dene.', 3600);
       }
     }
 
