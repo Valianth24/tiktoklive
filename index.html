@@ -166,7 +166,7 @@
 
     .dockHeader {
       display: grid;
-      grid-template-columns: 1fr 82px 82px;
+      grid-template-columns: 1fr 82px 92px 82px;
       gap: 7px;
       align-items: center;
       margin-bottom: 7px;
@@ -305,7 +305,7 @@
       }
 
       .dockHeader {
-        grid-template-columns: 1fr 56px 72px;
+        grid-template-columns: 1fr 50px 62px 66px;
         gap: 5px;
         margin-bottom: 6px;
       }
@@ -317,7 +317,7 @@
       .teamMeta strong { font-size: 10.5px; }
       .teamMeta span, .progress { display: none; }
       .cardActions { grid-template-columns: 1fr; gap: 0; }
-      input, select, button { font-size: 11px; padding: 6px 5px; border-radius: 10px; }
+      input, select, button { font-size: 10.5px; padding: 6px 4px; border-radius: 10px; }
       .centerMessage { top: 38%; padding: 18px; }
     }
 
@@ -345,6 +345,7 @@
       <div class="dockHeader">
         <select id="giftSelect"></select>
         <input id="activePointInput" type="number" min="1" max="1000" step="1" value="1" />
+        <button id="fullscreenBtn" class="secondary">Tam Ekran</button>
         <button id="audioUnlockBtn" class="secondary">Ses Aç</button>
       </div>
       <div id="teamGrid" class="teamGrid"></div>
@@ -365,6 +366,7 @@
     const teamGridEl = document.getElementById('teamGrid');
     const giftSelect = document.getElementById('giftSelect');
     const activePointInput = document.getElementById('activePointInput');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
     const centerMessage = document.getElementById('centerMessage');
     const centerBig = document.getElementById('centerBig');
     const centerSub = document.getElementById('centerSub');
@@ -712,6 +714,9 @@
 
       const audioBtn = document.getElementById('audioUnlockBtn');
       if (audioBtn) audioBtn.addEventListener('click', unlockAudio);
+
+      const fsBtn = document.getElementById('fullscreenBtn');
+      if (fsBtn) fsBtn.addEventListener('click', toggleFullscreen);
     }
 
     function teamCardHtml(team) {
@@ -766,6 +771,52 @@
       }
 
       seriesText.innerHTML = '<small>Seri</small>' + miniFlagHtml(seriesLeader) + '<span>' + escapeHtml(seriesLeader.code) + ' • ' + seriesLeader.raceWins + ' / ' + SERIES_TARGET + '</span>';
+    }
+
+    function isFullscreenActive() {
+      return !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.msFullscreenElement
+      );
+    }
+
+    async function toggleFullscreen() {
+      const root = document.documentElement;
+
+      try {
+        if (!isFullscreenActive()) {
+          if (root.requestFullscreen) {
+            await root.requestFullscreen({ navigationUI: 'hide' });
+          } else if (root.webkitRequestFullscreen) {
+            root.webkitRequestFullscreen();
+          } else if (root.msRequestFullscreen) {
+            root.msRequestFullscreen();
+          } else {
+            showCenterMessage('Tam ekran desteklenmiyor', 'Telefonda tarayıcı menüsünden ana ekrana ekleyerek daha geniş açabilirsin.', 4200);
+            return;
+          }
+        } else {
+          if (document.exitFullscreen) {
+            await document.exitFullscreen();
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+          } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+          }
+        }
+      } catch (err) {
+        showCenterMessage('Tam ekran açılamadı', 'Mobil tarayıcı izin vermediyse sayfayı ana ekrana ekleyip oradan aç.', 4200);
+      }
+
+      updateFullscreenButton();
+      setTimeout(resize, 160);
+    }
+
+    function updateFullscreenButton() {
+      const btn = document.getElementById('fullscreenBtn');
+      if (!btn) return;
+      btn.textContent = isFullscreenActive() ? 'Çık' : 'Tam Ekran';
     }
 
     function updateSeriesBoard() {
@@ -1222,6 +1273,9 @@
     function star(cx,cy,outer,inner,color){ ctx.save(); ctx.fillStyle=color; ctx.beginPath(); for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5; const r=i%2===0?outer:inner; const x=cx+Math.cos(a)*r; const y=cy+Math.sin(a)*r; if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); } ctx.closePath(); ctx.fill(); ctx.restore(); }
 
     window.addEventListener('resize', resize);
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+    document.addEventListener('msfullscreenchange', updateFullscreenButton);
     window.addEventListener('pointerdown', unlockAudio, { once: true });
 
     preloadAssets();
