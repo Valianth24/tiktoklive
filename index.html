@@ -4,20 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Flag Street Race Live</title>
-
   <style>
     :root {
-      --panel: rgba(7, 13, 24, 0.84);
+      --panel: rgba(7, 13, 24, 0.78);
       --text: #eaf2ff;
       --muted: #94a3b8;
-      --line: rgba(148, 163, 184, 0.22);
+      --line: rgba(148, 163, 184, 0.20);
       --gold: #fde68a;
     }
 
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     html, body {
       margin: 0;
@@ -38,17 +34,8 @@
         linear-gradient(180deg, #020617 0%, #07111f 54%, #0f172a 100%);
     }
 
-    #gameCanvas {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-    }
-
-    .hud {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-    }
+    #gameCanvas { display: block; width: 100vw; height: 100vh; }
+    .hud { position: fixed; inset: 0; pointer-events: none; }
 
     .glass {
       background: var(--panel);
@@ -68,7 +55,7 @@
       justify-content: center;
       gap: 10px;
       padding: 8px 16px;
-      min-width: min(420px, calc(100vw - 16px));
+      min-width: min(380px, calc(100vw - 16px));
       pointer-events: none;
     }
 
@@ -99,9 +86,70 @@
       overflow: hidden;
       flex: 0 0 auto;
       background: #fff;
-      box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,0.30),
-        0 4px 12px rgba(0,0,0,0.22);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.30), 0 4px 12px rgba(0,0,0,0.22);
+    }
+
+    .seriesBoard {
+      position: absolute;
+      top: 48px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(820px, calc(100vw - 16px));
+      padding: 4px 6px;
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 5px;
+      pointer-events: none;
+      background: rgba(7, 13, 24, 0.34);
+      border: 1px solid rgba(148, 163, 184, 0.10);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.20);
+      border-radius: 12px;
+    }
+
+    .seriesChip {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 4px;
+      border-radius: 9px;
+      background: rgba(15, 23, 42, 0.32);
+      border: 1px solid rgba(148, 163, 184, 0.10);
+    }
+
+    .seriesChip .miniFlag {
+      width: 22px;
+      height: 15px;
+      border-radius: 5px;
+    }
+
+    .seriesInfo {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+
+    .seriesName {
+      display: block;
+      font-size: 9px;
+      line-height: 1;
+      font-weight: 950;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .seriesScore {
+      flex: 0 0 auto;
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 1000;
+      color: #fde68a;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.82);
+      font-variant-numeric: tabular-nums;
     }
 
     .controlDock {
@@ -110,29 +158,18 @@
       bottom: 8px;
       transform: translateX(-50%);
       width: min(1080px, calc(100vw - 14px));
-      max-height: 35vh;
-      padding: 9px;
+      max-height: 29vh;
+      padding: 8px;
       pointer-events: auto;
       overflow: auto;
     }
 
     .dockHeader {
       display: grid;
-      grid-template-columns: 1fr 190px 82px 82px;
+      grid-template-columns: 1fr 82px 82px;
       gap: 7px;
       align-items: center;
       margin-bottom: 7px;
-    }
-
-    .dockLabel {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 950;
-      letter-spacing: 0.10em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .teamGrid {
@@ -157,55 +194,15 @@
       margin-bottom: 7px;
     }
 
-    .teamMeta {
-      min-width: 0;
-    }
+    .teamMeta { min-width: 0; }
+    .teamMeta strong { display: block; font-size: 13px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .teamMeta span { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 
-    .teamMeta strong {
-      display: block;
-      font-size: 13px;
-      line-height: 1.1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .cardActions { display: grid; grid-template-columns: 1fr; gap: 6px; }
+    .progress { height: 7px; background: rgba(148, 163, 184, 0.16); border-radius: 999px; overflow: hidden; margin-top: 7px; }
+    .fill { height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, #93c5fd, #fff); transition: width 220ms ease; }
 
-    .teamMeta span {
-      display: block;
-      margin-top: 2px;
-      color: var(--muted);
-      font-size: 11px;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .cardActions {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 6px;
-    }
-
-    .progress {
-      height: 7px;
-      background: rgba(148, 163, 184, 0.16);
-      border-radius: 999px;
-      overflow: hidden;
-      margin-top: 7px;
-    }
-
-    .fill {
-      height: 100%;
-      width: 0%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #93c5fd, #fff);
-      transition: width 220ms ease;
-    }
-
-    input, button, select {
-      font: inherit;
-      border: 0;
-      outline: 0;
-      border-radius: 12px;
-    }
+    input, button, select { font: inherit; border: 0; outline: 0; border-radius: 12px; }
 
     input, select {
       width: 100%;
@@ -252,40 +249,17 @@
       transition: opacity 260ms ease;
     }
 
-    .centerMessage.show {
-      opacity: 1;
-    }
-
-    .centerMessage .big {
-      font-size: clamp(32px, 5.6vw, 66px);
-      font-weight: 950;
-      line-height: 1;
-      margin-bottom: 10px;
-    }
-
-    .centerMessage .sub {
-      color: var(--muted);
-      font-size: clamp(14px, 1.8vw, 20px);
-    }
+    .centerMessage.show { opacity: 1; }
+    .centerMessage .big { font-size: clamp(32px, 5.6vw, 66px); font-weight: 950; line-height: 1; margin-bottom: 10px; }
+    .centerMessage .sub { color: var(--muted); font-size: clamp(14px, 1.8vw, 20px); }
 
     @media (max-width: 1050px) {
-      .teamGrid {
-        grid-template-columns: repeat(3, minmax(120px, 1fr));
-      }
-
-      .controlDock {
-        max-height: 39vh;
-      }
-
-      .dockHeader {
-        grid-template-columns: 1fr 170px 74px 78px;
-      }
+      .teamGrid { grid-template-columns: repeat(3, minmax(120px, 1fr)); }
+      .controlDock { max-height: 32vh; }
     }
 
     @media (max-width: 640px) {
-      .glass {
-        backdrop-filter: none;
-      }
+      .glass { backdrop-filter: none; }
 
       .topMini {
         top: 6px;
@@ -294,19 +268,38 @@
         border-radius: 15px;
       }
 
-      .topPill {
-        font-size: 13px;
-        gap: 6px;
+      .topPill { font-size: 13px; gap: 6px; }
+      .topPill small { font-size: 9px; }
+
+      .seriesBoard {
+        top: 46px;
+        width: calc(100vw - 10px);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 3px;
+        padding: 3px;
+        border-radius: 11px;
+        background: rgba(7, 13, 24, 0.30);
       }
 
-      .topPill small {
-        font-size: 9px;
+      .seriesChip {
+        grid-template-columns: 20px 1fr;
+        gap: 3px;
+        padding: 3px;
+        border-radius: 8px;
       }
+
+      .seriesChip .miniFlag {
+        width: 20px;
+        height: 14px;
+      }
+
+      .seriesName { font-size: 8px; }
+      .seriesScore { font-size: 11px; }
 
       .controlDock {
         bottom: 6px;
         width: calc(100vw - 10px);
-        max-height: 24vh;
+        max-height: 20vh;
         padding: 6px;
         border-radius: 15px;
       }
@@ -317,93 +310,58 @@
         margin-bottom: 6px;
       }
 
-      .dockLabel {
-        display: none;
-      }
+      .teamGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+      .teamCard { padding: 5px; border-radius: 12px; }
+      .teamHead { grid-template-columns: 28px 1fr; gap: 5px; margin-bottom: 4px; }
+      .miniFlag { width: 28px; height: 19px; border-radius: 6px; }
+      .teamMeta strong { font-size: 10.5px; }
+      .teamMeta span, .progress { display: none; }
+      .cardActions { grid-template-columns: 1fr; gap: 0; }
+      input, select, button { font-size: 11px; padding: 6px 5px; border-radius: 10px; }
+      .centerMessage { top: 38%; padding: 18px; }
+    }
 
-      .teamGrid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 5px;
-      }
-
-      .teamCard {
-        padding: 5px;
-        border-radius: 12px;
-      }
-
-      .teamHead {
-        grid-template-columns: 28px 1fr;
-        gap: 5px;
-        margin-bottom: 4px;
-      }
-
-      .miniFlag {
-        width: 28px;
-        height: 19px;
-        border-radius: 6px;
-      }
-
-      .teamMeta strong {
-        font-size: 10.5px;
-      }
-
-      .teamMeta span,
-      .progress {
-        display: none;
-      }
-
-      .cardActions {
-        grid-template-columns: 1fr;
-        gap: 0;
-      }
-
-      input, select, button {
-        font-size: 11px;
-        padding: 6px 5px;
-        border-radius: 10px;
-      }
-
-      .centerMessage {
-        top: 38%;
-        padding: 18px;
-      }
+    @media (max-width: 640px) and (max-height: 620px) {
+      .controlDock { max-height: 18vh; }
+      .seriesBoard { top: 44px; }
+      .topMini { padding: 6px 9px; }
+      .teamCard { padding: 4px; }
+      input, select, button { font-size: 10.5px; padding: 5px 4px; }
     }
   </style>
 </head>
-
 <body>
   <canvas id="gameCanvas"></canvas>
 
   <div class="hud">
     <div class="topMini glass">
-      <div class="topPill" id="leaderText">
-        <small>Lider</small>
-        <span>---</span>
-      </div>
+      <div class="topPill" id="leaderText"><small>Lider</small><span>---</span></div>
+      <div class="topPill" id="seriesText"><small>Seri</small><span>0 / 5</span></div>
     </div>
+
+    <div class="seriesBoard glass" id="seriesBoard"></div>
 
     <section class="controlDock glass">
       <div class="dockHeader">
-        <div class="dockLabel">Yorum: TR / AZ / SYR / AFG / TKM / KURD — Hediye seç → ülkeye ekle</div>
         <select id="giftSelect"></select>
         <input id="activePointInput" type="number" min="1" max="1000" step="1" value="1" />
         <button id="audioUnlockBtn" class="secondary">Ses Aç</button>
       </div>
-
       <div id="teamGrid" class="teamGrid"></div>
     </section>
 
     <div id="centerMessage" class="centerMessage glass">
       <div id="centerBig" class="big">Yarış Hazır</div>
-      <div id="centerSub" class="sub">Yorumla ülke seçilir, hediye o ülkeye puan verir.</div>
+      <div id="centerSub" class="sub">Hediyeler arabaları ileri taşır.</div>
     </div>
   </div>
 
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-
     const leaderText = document.getElementById('leaderText');
+    const seriesText = document.getElementById('seriesText');
+    const seriesBoard = document.getElementById('seriesBoard');
     const teamGridEl = document.getElementById('teamGrid');
     const giftSelect = document.getElementById('giftSelect');
     const activePointInput = document.getElementById('activePointInput');
@@ -412,11 +370,14 @@
     const centerSub = document.getElementById('centerSub');
 
     const TARGET_SCORE = 1000;
-    const MID_SCORE = 200;
+    const SERIES_TARGET = 5;
+    const AUTO_NEXT_RACE_DELAY = 3600;
 
     let lastTime = performance.now();
     let dpr = 1;
     let raceEnded = false;
+    let gameOver = false;
+    let raceNumber = 1;
     let audioUnlocked = false;
     let activeAnthemCode = null;
 
@@ -424,50 +385,50 @@
     const giftImages = {};
     const viewerTeamByUser = new Map();
 
-    /*
-      Türkiye TikTok Live 1 coin hediyeler.
-      Gerçek PNG için repo içine dosya koy:
-      assets/gifts/rose.png
-      assets/gifts/gg.png
-      assets/gifts/tiktok.png
-      assets/gifts/pop.png
-      vb.
-
-      PNG yoksa kutu çizmez; okunabilir hediye rozeti çizer.
-    */
     const TR_ONE_COIN_GIFTS = [
-      { name: 'Rose', short: 'ROSE', power: 1, featured: true },
-      { name: 'GG', short: 'GG', power: 1, featured: true },
-      { name: 'TikTok', short: 'TT', power: 1, featured: true },
-      { name: 'Pop', short: 'POP', power: 1, featured: true },
-      { name: 'Ice Cream Cone', short: 'ICE', power: 1, featured: true },
-      { name: 'Heart Me', short: 'HEART', power: 1, featured: true },
-
-      { name: 'Love you so much', short: 'LOVE', power: 1, featured: false },
-      { name: 'Cake Slice', short: 'CAKE', power: 1, featured: false },
-      { name: 'Creeper', short: 'CREEP', power: 1, featured: false },
-      { name: 'Glow Stick', short: 'GLOW', power: 1, featured: false },
-      { name: 'Wink wink', short: 'WINK', power: 1, featured: false },
-      { name: 'Freestyle', short: 'FREE', power: 1, featured: false },
-      { name: 'Oldies', short: 'OLD', power: 1, featured: false },
-      { name: 'Congratulations', short: 'CONG', power: 1, featured: false },
-      { name: 'So Cute', short: 'CUTE', power: 1, featured: false },
-      { name: 'Placeholder', short: 'PLACE', power: 1, featured: false },
-      { name: 'Thumbs Up', short: 'LIKE', power: 1, featured: false },
-      { name: 'Heart', short: 'HEART', power: 1, featured: false },
-      { name: 'Love you', short: 'LOVE', power: 1, featured: false },
-      { name: 'Happy Bairam', short: 'BAYR', power: 1, featured: false },
-      { name: 'Tulip', short: 'TULIP', power: 1, featured: false },
-      { name: 'Music Album', short: 'MUSIC', power: 1, featured: false },
-      { name: 'Parliyorsun!', short: 'PARLA', power: 1, featured: false },
-      { name: 'Cherry cake', short: 'CHERRY', power: 1, featured: false },
-      { name: 'Go Popular', short: 'POP+', power: 1, featured: false },
-      { name: 'Club Cheers', short: 'CLUB', power: 1, featured: false },
-      { name: 'Wink Charm', short: 'CHARM', power: 1, featured: false }
+      {
+        name: 'Rose',
+        power: 1,
+        img: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/eba3a9bb85c33e017f3648eaf88d7189~tplv-obj.webp'
+      },
+      {
+        name: 'GG',
+        power: 1,
+        img: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/3f02fa9594bd1495ff4e8aa5ae265eef~tplv-obj.webp'
+      },
+      {
+        name: 'TikTok',
+        power: 1,
+        img: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/802a21ae29f9fae5abe3693de9f874bd~tplv-obj.webp'
+      },
+      {
+        name: 'Pop',
+        power: 1,
+        img: 'https://p16-webcast.tiktokcdn.com/img/alisg/webcast-sg/resource/0b4f61e8ab637f11449300d03929ef87.png~tplv-obj.webp'
+      },
+      {
+        name: 'Ice Cream Cone',
+        power: 1,
+        img: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/968820bc85e274713c795a6aef3f7c67~tplv-obj.webp'
+      },
+      {
+        name: 'Heart Me',
+        power: 1,
+        img: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/d56945782445b0b8c8658ed44f894c7b~tplv-obj.webp'
+      },
+      {
+        name: 'Thumbs Up',
+        power: 1,
+        img: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/570a663e27bdc460e05556fd1596771a~tplv-obj.webp'
+      },
+      {
+        name: 'Heart',
+        power: 1,
+        img: 'https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/dd300fd35a757d751301fba862a258f1~tplv-obj.webp'
+      }
     ];
 
     const GIFT_POWER = Object.fromEntries(TR_ONE_COIN_GIFTS.map(g => [g.name, g.power]));
-    const GIFT_SHORT = Object.fromEntries(TR_ONE_COIN_GIFTS.map(g => [g.name, g.short]));
 
     const TEAM_DEFAULT_GIFT = {
       TR: 'Rose',
@@ -488,54 +449,12 @@
     };
 
     const teams = [
-      {
-        code: 'TR',
-        aliases: ['TR', 'TURKEY', 'TURKIYE', 'TÜRKİYE', 'TURKIYE', 'TURK'],
-        name: 'Türkiye',
-        color: '#c1121f',
-        accent: '#ffffff',
-        carType: 'gt'
-      },
-      {
-        code: 'AZ',
-        aliases: ['AZ', 'AZE', 'AZERBAIJAN', 'AZERBAYCAN', 'AZƏRBAYCAN'],
-        name: 'Azerbaycan',
-        color: '#0096c7',
-        accent: '#ef3340',
-        carType: 'rally'
-      },
-      {
-        code: 'SYR',
-        aliases: ['SYR', 'SYRIA', 'SURIYE', 'SURİYE', 'SURIYELI', 'SURİYELİ'],
-        name: 'Suriye',
-        color: '#16a34a',
-        accent: '#ef4444',
-        carType: 'muscle'
-      },
-      {
-        code: 'AFG',
-        aliases: ['AFG', 'AFGHANISTAN', 'AFGANISTAN', 'AFGANİSTAN'],
-        name: 'Afganistan',
-        color: '#111827',
-        accent: '#ef4444',
-        carType: 'suv'
-      },
-      {
-        code: 'TKM',
-        aliases: ['TKM', 'TM', 'TURKMENISTAN', 'TÜRKMENİSTAN', 'TURKMEN'],
-        name: 'Türkmenistan',
-        color: '#0f766e',
-        accent: '#f8fafc',
-        carType: 'hyper'
-      },
-      {
-        code: 'KURD',
-        aliases: ['KURD', 'KURDISTAN', 'KÜRDİSTAN', 'KURT', 'KÜRT'],
-        name: 'Kurd',
-        color: '#f59e0b',
-        accent: '#ffffff',
-        carType: 'formula'
-      }
+      { code: 'TR', aliases: ['TR', 'TURKEY', 'TURKIYE', 'TÜRKİYE', 'TURK'], name: 'Türkiye', color: '#c1121f', accent: '#ffffff', carType: 'gt' },
+      { code: 'KURD', aliases: ['J', 'KURD', 'KURDISTAN', 'KÜRDİSTAN', 'KURT', 'KÜRT'], name: 'Kürdistan', color: '#f59e0b', accent: '#ffffff', carType: 'formula' },
+      { code: 'AZ', aliases: ['AZ', 'AZE', 'AZERBAIJAN', 'AZERBAYCAN', 'AZƏRBAYCAN'], name: 'Azerbaycan', color: '#0096c7', accent: '#ef3340', carType: 'rally' },
+      { code: 'SYR', aliases: ['SYR', 'SYRIA', 'SURIYE', 'SURİYE', 'SURIYELI', 'SURİYELİ'], name: 'Suriye', color: '#16a34a', accent: '#ef4444', carType: 'muscle' },
+      { code: 'AFG', aliases: ['AFG', 'AFGHANISTAN', 'AFGANISTAN', 'AFGANİSTAN'], name: 'Afganistan', color: '#111827', accent: '#ef4444', carType: 'suv' },
+      { code: 'TKM', aliases: ['TKM', 'TM', 'TURKMENISTAN', 'TÜRKMENİSTAN', 'TURKMEN'], name: 'Türkmenistan', color: '#0f766e', accent: '#f8fafc', carType: 'hyper' }
     ].map((team, index) => ({
       ...team,
       score: 0,
@@ -545,7 +464,8 @@
       lane: index,
       pulse: 0,
       glow: 0,
-      rank: index + 1
+      rank: index + 1,
+      raceWins: 0
     }));
 
     const particles = [];
@@ -553,20 +473,12 @@
     const speedLines = [];
     const giftSprites = [];
 
-    function toGiftSlug(name) {
-      return String(name || '')
-        .toLocaleLowerCase('tr-TR')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^\w\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-');
-    }
-
     function preloadAssets() {
       TR_ONE_COIN_GIFTS.forEach(gift => {
         const img = new Image();
-        img.src = 'assets/gifts/' + toGiftSlug(gift.name) + '.png';
+        img.crossOrigin = 'anonymous';
+        img.referrerPolicy = 'no-referrer';
+        img.src = gift.img;
         img.onerror = () => { img.dataset.failed = '1'; };
         giftImages[gift.name] = img;
       });
@@ -583,68 +495,48 @@
     function resize() {
       const maxDpr = window.innerWidth <= 640 ? 1.5 : 2;
       dpr = Math.max(1, Math.min(maxDpr, window.devicePixelRatio || 1));
-
       canvas.width = Math.floor(window.innerWidth * dpr);
       canvas.height = Math.floor(window.innerHeight * dpr);
       canvas.style.width = window.innerWidth + 'px';
       canvas.style.height = window.innerHeight + 'px';
-
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       layoutTeams(true);
     }
 
     function dockReservedHeight() {
       const w = window.innerWidth;
-
-      if (w <= 640) {
-        return Math.min(215, Math.max(185, window.innerHeight * 0.24));
-      }
-
-      if (w <= 1050) {
-        return Math.min(260, Math.max(205, window.innerHeight * 0.32));
-      }
-
-      return 170;
+      const h = window.innerHeight;
+      if (w <= 640) return h <= 620 ? 150 : Math.min(188, Math.max(160, h * 0.20));
+      if (w <= 1050) return Math.min(240, Math.max(190, h * 0.30));
+      return 156;
     }
 
     function trackBounds() {
       const w = window.innerWidth;
       const h = window.innerHeight;
-
       const leftPad = w <= 640 ? 72 : w <= 1050 ? 94 : 116;
-      const top = w <= 640 ? 82 : 94;
+      const top = w <= 640 ? (h <= 620 ? 146 : 158) : w <= 1050 ? 146 : 138;
       const bottom = h - dockReservedHeight() - 18;
-
       return {
         startX: leftPad,
         finishX: w - (w <= 640 ? 54 : 76),
         top,
-        bottom: Math.max(top + 206, bottom)
+        bottom: Math.max(top + (w <= 640 && h <= 620 ? 205 : 250), bottom)
       };
     }
 
     function layoutTeams(force) {
       const b = trackBounds();
       const laneGap = (b.bottom - b.top) / Math.max(1, teams.length - 1);
-
       teams.forEach((team, i) => {
         team.y = b.top + i * laneGap;
         const targetX = scoreToX(team.displayScore, b);
-
-        if (force || !team.x) {
-          team.x = targetX;
-        }
+        if (force || !team.x) team.x = targetX;
       });
     }
 
     function scoreProgress(score) {
-      const s = Math.max(0, Math.min(TARGET_SCORE, score));
-
-      if (s <= MID_SCORE) {
-        return (s / MID_SCORE) * 0.5;
-      }
-
-      return 0.5 + ((s - MID_SCORE) / (TARGET_SCORE - MID_SCORE)) * 0.5;
+      return Math.max(0, Math.min(1, score / TARGET_SCORE));
     }
 
     function scoreToX(score, b) {
@@ -667,19 +559,9 @@
 
     function findTeamByComment(text) {
       const normalized = normalizeText(text).replaceAll(' ', '');
-
-      if (!normalized) {
-        return null;
-      }
-
-      const exact = teams.find(team =>
-        team.aliases.some(alias => normalizeText(alias).replaceAll(' ', '') === normalized)
-      );
-
-      if (exact) {
-        return exact;
-      }
-
+      if (!normalized) return null;
+      const exact = teams.find(team => team.aliases.some(alias => normalizeText(alias).replaceAll(' ', '') === normalized));
+      if (exact) return exact;
       return teams.find(team => normalized.includes(team.code));
     }
 
@@ -687,38 +569,26 @@
       if (typeof giftNameOrValue === 'number') {
         return Math.max(1, giftNameOrValue) * Math.max(1, repeatCount || 1);
       }
-
       const key = Object.keys(GIFT_POWER).find(name => normalizeText(name) === normalizeText(giftNameOrValue));
       const base = key ? GIFT_POWER[key] : 1;
-
       return base * Math.max(1, Number(repeatCount) || 1);
     }
 
-    function selectedGiftName() {
-      return giftSelect.value || 'Rose';
-    }
+    function selectedGiftName() { return giftSelect.value || 'Rose'; }
 
     function selectedPoints() {
       const value = Math.max(1, Math.floor(Number(activePointInput.value) || 1));
       activePointInput.value = value;
-
-      if (giftSelect.value) {
-        GIFT_POWER[giftSelect.value] = value;
-      }
-
+      if (giftSelect.value) GIFT_POWER[giftSelect.value] = value;
       return value;
     }
 
     function addPoints(team, amount, giftName, userName) {
       unlockAudio();
-
-      if (!team || raceEnded) {
-        return false;
-      }
+      if (!team || raceEnded || gameOver) return false;
 
       const points = Math.max(1, Math.floor(Number(amount) || 1));
       const before = team.score;
-
       team.score = Math.min(TARGET_SCORE, team.score + points);
       team.pulse = 1;
       team.glow = 1;
@@ -726,76 +596,40 @@
       spawnParticles(team.x - 42, team.y + 22, team.color, Math.min(42, 8 + points / 5));
       spawnSpeedLines(team.x - 58, team.y, Math.min(24, 5 + points / 8));
       spawnGiftSprite(team, giftName || selectedGiftName(), points);
-      addFloatingText(team.x, team.y - 38, '+' + points + ' ' + team.code, team.color);
-
+      addFloatingText(team.x, team.y - 44, '+' + points, team.color);
       updatePanels();
       updateAnthem();
 
-      if (before < TARGET_SCORE && team.score >= TARGET_SCORE) {
-        finishRace(team);
-      }
-
+      if (before < TARGET_SCORE && team.score >= TARGET_SCORE) finishRace(team);
       return true;
     }
 
     function finishRace(team) {
+      if (!team || raceEnded || gameOver) return;
+
       raceEnded = true;
       team.score = TARGET_SCORE;
-      showCenterMessage(team.name + ' Kazandı!', '1000 puana ulaştı. Yeni yarış için sayfayı yenile.', 8000);
-    }
-
-    function applyComment(userName, comment) {
-      const team = findTeamByComment(comment);
-
-      if (!team) {
-        return false;
-      }
-
-      const key = normalizeText(userName || 'viewer');
-      viewerTeamByUser.set(key, team.code);
-
-      team.pulse = 1;
-      team.glow = 0.45;
-
-      addFloatingText(team.x, team.y - 42, (userName || 'viewer') + ' → ' + team.code, team.color);
+      team.displayScore = TARGET_SCORE;
+      team.raceWins += 1;
       updatePanels();
+      updateAnthem();
 
-      return true;
-    }
-
-    function applyGift(userName, teamCodeOrComment, giftNameOrValue, repeatCount) {
-      let team = findTeamByComment(teamCodeOrComment);
-
-      if (!team && userName) {
-        const savedCode = viewerTeamByUser.get(normalizeText(userName));
-
-        if (savedCode) {
-          team = teams.find(t => t.code === savedCode);
-        }
+      if (team.raceWins >= SERIES_TARGET) {
+        gameOver = true;
+        showCenterMessage(team.name + ' Oyunu Kazandı!', 'Toplam 5 yarış kazandı. Serinin galibi belli oldu.', 12000);
+        return;
       }
 
-      if (!team) {
-        return false;
-      }
-
-      const giftName = typeof giftNameOrValue === 'number'
-        ? 'Rose'
-        : String(giftNameOrValue || 'Rose');
-
-      const power = getGiftPower(giftNameOrValue || 'Rose', repeatCount || 1);
-      return addPoints(team, power, giftName, userName || 'viewer');
+      showCenterMessage(team.name + ' Yarışı Kazandı!', team.raceWins + ' / ' + SERIES_TARGET + ' oldu. Yeni yarış başlıyor.', AUTO_NEXT_RACE_DELAY - 400);
+      setTimeout(startNextRace, AUTO_NEXT_RACE_DELAY);
     }
 
-    window.applyTikTokComment = applyComment;
-    window.applyTikTokGift = applyGift;
+    function startNextRace() {
+      if (gameOver) return;
 
-    window.addTeamPoints = function(teamCode, points) {
-      const team = findTeamByComment(teamCode);
-      return addPoints(team, points, selectedGiftName(), 'manual');
-    };
-
-    window.resetRace = function() {
       raceEnded = false;
+      raceNumber += 1;
+      activeAnthemCode = null;
 
       teams.forEach(team => {
         team.score = 0;
@@ -809,32 +643,66 @@
       speedLines.length = 0;
       giftSprites.length = 0;
 
+      layoutTeams(true);
+      updatePanels();
+      showCenterMessage('Yeni Yarış!', 'Seride 5 yarışı alan oyunu kazanır.', 1800);
+    }
+
+    function applyComment(userName, comment) {
+      if (gameOver) return false;
+      const team = findTeamByComment(comment);
+      if (!team) return false;
+      const key = normalizeText(userName || 'viewer');
+      viewerTeamByUser.set(key, team.code);
+      team.pulse = 1;
+      team.glow = 0.45;
+      updatePanels();
+      return true;
+    }
+
+    function applyGift(userName, teamCodeOrComment, giftNameOrValue, repeatCount) {
+      let team = findTeamByComment(teamCodeOrComment);
+      if (!team && userName) {
+        const savedCode = viewerTeamByUser.get(normalizeText(userName));
+        if (savedCode) team = teams.find(t => t.code === savedCode);
+      }
+      if (!team) return false;
+      const giftName = typeof giftNameOrValue === 'number' ? 'Rose' : String(giftNameOrValue || 'Rose');
+      const power = getGiftPower(giftNameOrValue || 'Rose', repeatCount || 1);
+      return addPoints(team, power, giftName, userName || 'viewer');
+    }
+
+    window.applyTikTokComment = applyComment;
+    window.applyTikTokGift = applyGift;
+    window.addTeamPoints = function(teamCode, points) {
+      const team = findTeamByComment(teamCode);
+      return addPoints(team, points, selectedGiftName(), 'manual');
+    };
+    window.resetRace = function() {
+      raceEnded = false;
+      gameOver = false;
+      raceNumber = 1;
+      activeAnthemCode = null;
+      teams.forEach(team => { team.score = 0; team.displayScore = 0; team.pulse = 0; team.glow = 0; team.raceWins = 0; });
+      particles.length = 0;
+      floatingTexts.length = 0;
+      speedLines.length = 0;
+      giftSprites.length = 0;
       updatePanels();
       layoutTeams(true);
-      showCenterMessage('Yarış Sıfırlandı', 'Yeni yarış başladı.', 2200);
+      showCenterMessage('Oyun Sıfırlandı', '5 yarışlık seri yeniden başladı.', 1800);
     };
 
     function buildControls() {
-      const ordered = [
-        ...TR_ONE_COIN_GIFTS.filter(g => g.featured),
-        ...TR_ONE_COIN_GIFTS.filter(g => !g.featured)
-      ];
-
-      giftSelect.innerHTML = ordered.map(gift => {
-        return '<option value="' + escapeHtml(gift.name) + '">' + escapeHtml(gift.name) + ' · 1 coin</option>';
+      giftSelect.innerHTML = TR_ONE_COIN_GIFTS.map(gift => {
+        return '<option value="' + escapeHtml(gift.name) + '">' + escapeHtml(gift.name) + '</option>';
       }).join('');
-
       giftSelect.value = 'Rose';
-
-      giftSelect.addEventListener('change', () => {
-        activePointInput.value = GIFT_POWER[giftSelect.value] || 1;
-      });
-
+      giftSelect.addEventListener('change', () => { activePointInput.value = GIFT_POWER[giftSelect.value] || 1; });
       activePointInput.addEventListener('change', selectedPoints);
       activePointInput.value = GIFT_POWER[selectedGiftName()] || 1;
 
       teamGridEl.innerHTML = teams.map(team => teamCardHtml(team)).join('');
-
       teamGridEl.querySelectorAll('[data-add-team]').forEach(btn => {
         btn.addEventListener('click', () => {
           const team = teams.find(t => t.code === btn.dataset.addTeam);
@@ -843,10 +711,7 @@
       });
 
       const audioBtn = document.getElementById('audioUnlockBtn');
-
-      if (audioBtn) {
-        audioBtn.addEventListener('click', unlockAudio);
-      }
+      if (audioBtn) audioBtn.addEventListener('click', unlockAudio);
     }
 
     function teamCardHtml(team) {
@@ -854,37 +719,24 @@
         '<div class="teamCard" id="card_' + team.code + '">' +
           '<div class="teamHead">' +
             '<div class="miniFlag">' + flagMarkup(team.code) + '</div>' +
-            '<div class="teamMeta">' +
-              '<strong>' + escapeHtml(team.name) + '</strong>' +
-              '<span id="score_' + team.code + '">0 / 1000</span>' +
-            '</div>' +
+            '<div class="teamMeta"><strong>' + escapeHtml(team.name) + '</strong><span id="score_' + team.code + '">0 / 1000</span></div>' +
           '</div>' +
-          '<div class="cardActions">' +
-            '<button data-add-team="' + team.code + '">+ Ekle</button>' +
-          '</div>' +
-          '<div class="progress">' +
-            '<div id="fill_' + team.code + '" class="fill" style="background: linear-gradient(90deg, ' + team.color + ', rgba(255,255,255,0.90));"></div>' +
-          '</div>' +
+          '<div class="cardActions"><button data-add-team="' + team.code + '">+ Ekle</button></div>' +
+          '<div class="progress"><div id="fill_' + team.code + '" class="fill" style="background: linear-gradient(90deg, ' + team.color + ', rgba(255,255,255,0.90));"></div></div>' +
         '</div>';
     }
 
     function updatePanels() {
       updateRanks();
-
       teams.forEach(team => {
         const scoreEl = document.getElementById('score_' + team.code);
         const fillEl = document.getElementById('fill_' + team.code);
-
-        if (scoreEl) {
-          scoreEl.textContent = team.score + ' / ' + TARGET_SCORE + '  •  #' + team.rank;
-        }
-
-        if (fillEl) {
-          fillEl.style.width = Math.min(100, scoreProgress(team.score) * 100) + '%';
-        }
+        if (scoreEl) scoreEl.textContent = team.score + ' / ' + TARGET_SCORE + '  •  ' + team.raceWins + '/' + SERIES_TARGET + '  •  #' + team.rank;
+        if (fillEl) fillEl.style.width = Math.min(100, scoreProgress(team.score) * 100) + '%';
       });
-
       updateLeaderUI();
+      updateSeriesUI();
+      updateSeriesBoard();
     }
 
     function getLeader() {
@@ -898,71 +750,67 @@
 
     function updateLeaderUI() {
       const leader = getLeader();
-
-      if (!leader) {
-        return;
-      }
-
-      leaderText.innerHTML =
-        '<small>Lider</small>' +
-        miniFlagHtml(leader) +
-        '<span>' + escapeHtml(leader.code) + ' • ' + leader.score + '</span>';
-
+      if (!leader) return;
+      leaderText.innerHTML = '<small>Lider</small>' + miniFlagHtml(leader) + '<span>' + escapeHtml(leader.code) + ' • ' + leader.score + '</span>';
       updateAnthem();
     }
 
-    function unlockAudio() {
-      if (audioUnlocked) {
+    function updateSeriesUI() {
+      if (!seriesText) return;
+
+      const seriesLeader = [...teams].sort((a, b) => b.raceWins - a.raceWins || b.score - a.score || a.lane - b.lane)[0];
+
+      if (!seriesLeader || seriesLeader.raceWins <= 0) {
+        seriesText.innerHTML = '<small>Seri</small><span>0 / ' + SERIES_TARGET + '</span>';
         return;
       }
 
-      audioUnlocked = true;
+      seriesText.innerHTML = '<small>Seri</small>' + miniFlagHtml(seriesLeader) + '<span>' + escapeHtml(seriesLeader.code) + ' • ' + seriesLeader.raceWins + ' / ' + SERIES_TARGET + '</span>';
+    }
 
+    function updateSeriesBoard() {
+      if (!seriesBoard) return;
+
+      seriesBoard.innerHTML = teams.map(team => {
+        return '' +
+          '<div class="seriesChip">' +
+            '<div class="miniFlag">' + flagMarkup(team.code) + '</div>' +
+            '<div class="seriesInfo">' +
+              '<span class="seriesName">' + escapeHtml(team.name) + '</span>' +
+              '<span class="seriesScore">' + team.raceWins + '/' + SERIES_TARGET + '</span>' +
+            '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    function unlockAudio() {
+      if (audioUnlocked) return;
+      audioUnlocked = true;
       Object.values(anthemAudio).forEach(audio => {
         audio.volume = 0;
-
-        audio.play()
-          .then(() => {
-            audio.pause();
-            audio.currentTime = 0;
-            audio.volume = 0.42;
-          })
-          .catch(() => {
-            audio.volume = 0.42;
-          });
+        audio.play().then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.volume = 0.42;
+        }).catch(() => { audio.volume = 0.42; });
       });
-
       const btn = document.getElementById('audioUnlockBtn');
-
-      if (btn) {
-        btn.textContent = 'Ses Açık';
-      }
-
+      if (btn) btn.textContent = 'Ses Açık';
       setTimeout(updateAnthem, 120);
     }
 
     function updateAnthem() {
-      if (!audioUnlocked) {
-        return;
-      }
-
+      if (!audioUnlocked) return;
       const leader = getLeader();
-
-      if (!leader || activeAnthemCode === leader.code) {
-        return;
-      }
-
+      if (!leader || activeAnthemCode === leader.code) return;
       activeAnthemCode = leader.code;
-
       Object.entries(anthemAudio).forEach(([code, audio]) => {
         if (code !== leader.code) {
           audio.pause();
           audio.currentTime = 0;
         }
       });
-
       const active = anthemAudio[leader.code];
-
       if (active) {
         active.volume = 0.42;
         active.loop = true;
@@ -971,12 +819,7 @@
     }
 
     function escapeHtml(value) {
-      return String(value)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#39;');
+      return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
     }
 
     function miniFlagHtml(team) {
@@ -984,30 +827,12 @@
     }
 
     function flagMarkup(code) {
-      if (code === 'TR') {
-        return '<svg viewBox="0 0 60 40" width="100%" height="100%"><rect width="60" height="40" fill="#e30a17"/><circle cx="25" cy="20" r="10" fill="#fff"/><circle cx="28.5" cy="20" r="8" fill="#e30a17"/><polygon points="42,14 43.7,18.2 48.2,18.5 44.8,21.4 45.9,25.8 42,23.4 38.1,25.8 39.2,21.4 35.8,18.5 40.3,18.2" fill="#fff"/></svg>';
-      }
-
-      if (code === 'AZ') {
-        return '<svg viewBox="0 0 60 40" width="100%" height="100%"><rect width="60" height="13.33" fill="#00b5e2"/><rect y="13.33" width="60" height="13.34" fill="#ef3340"/><rect y="26.67" width="60" height="13.33" fill="#509e2f"/><circle cx="27" cy="20" r="7" fill="#fff"/><circle cx="30.2" cy="20" r="5.7" fill="#ef3340"/><polygon points="42,14 43.4,18.2 47.8,18.3 44.3,21 45.4,25.2 42,22.7 38.6,25.2 39.7,21 36.2,18.3 40.6,18.2" fill="#fff"/></svg>';
-      }
-
-      if (code === 'SYR') {
-        return '<svg viewBox="0 0 60 40" width="100%" height="100%"><rect width="60" height="13.33" fill="#ce1126"/><rect y="13.33" width="60" height="13.34" fill="#fff"/><rect y="26.67" width="60" height="13.33" fill="#000"/><polygon points="23,15 24.3,18.4 28,18.5 25.1,20.7 26.1,24 23,22 19.9,24 20.9,20.7 18,18.5 21.7,18.4" fill="#007a3d"/><polygon points="37,15 38.3,18.4 42,18.5 39.1,20.7 40.1,24 37,22 33.9,24 34.9,20.7 32,18.5 35.7,18.4" fill="#007a3d"/></svg>';
-      }
-
-      if (code === 'AFG') {
-        return '<svg viewBox="0 0 60 40" width="100%" height="100%"><rect width="20" height="40" fill="#000"/><rect x="20" width="20" height="40" fill="#d32011"/><rect x="40" width="20" height="40" fill="#007a36"/><circle cx="30" cy="20" r="6" fill="none" stroke="#fff" stroke-width="2"/><path d="M26 25 L34 25 L32 17 L28 17 Z" fill="#fff"/></svg>';
-      }
-
-      if (code === 'TKM') {
-        return '<svg viewBox="0 0 60 40" width="100%" height="100%"><rect width="60" height="40" fill="#00843d"/><rect x="8" width="8" height="40" fill="#7a1e2c"/><circle cx="35" cy="16" r="7" fill="#fff"/><circle cx="38" cy="16" r="6" fill="#00843d"/><polygon points="48,10 49.3,14.4 53.9,14.4 50.2,17 51.5,21.4 48,18.8 44.5,21.4 45.8,17 42.1,14.4 46.7,14.4" fill="#fff"/></svg>';
-      }
-
-      if (code === 'KURD') {
-        return '<svg viewBox="0 0 60 40" width="100%" height="100%"><rect width="60" height="13.33" fill="#d71920"/><rect y="13.33" width="60" height="13.34" fill="#fff"/><rect y="26.67" width="60" height="13.33" fill="#007a3d"/><circle cx="30" cy="20" r="6" fill="#f2c230"/><g stroke="#f2c230" stroke-width="1.4"><line x1="30" y1="9" x2="30" y2="15"/><line x1="30" y1="25" x2="30" y2="31"/><line x1="19" y1="20" x2="24" y2="20"/><line x1="36" y1="20" x2="41" y2="20"/><line x1="22" y1="12" x2="26" y2="16"/><line x1="34" y1="24" x2="38" y2="28"/><line x1="38" y1="12" x2="34" y2="16"/><line x1="26" y1="24" x2="22" y2="28"/></g></svg>';
-      }
-
+      if (code === 'TR') return '<svg viewBox="0 0 60 40" width="100%" height="100%"><rect width="60" height="40" fill="#e30a17"/><circle cx="25" cy="20" r="10" fill="#fff"/><circle cx="28.5" cy="20" r="8" fill="#e30a17"/><polygon points="42,14 43.7,18.2 48.2,18.5 44.8,21.4 45.9,25.8 42,23.4 38.1,25.8 39.2,21.4 35.8,18.5 40.3,18.2" fill="#fff"/></svg>';
+      if (code === 'AZ') return '<svg viewBox="0 0 60 40" width="100%" height="100%"><rect width="60" height="13.33" fill="#00b5e2"/><rect y="13.33" width="60" height="13.34" fill="#ef3340"/><rect y="26.67" width="60" height="13.33" fill="#509e2f"/><circle cx="27" cy="20" r="7" fill="#fff"/><circle cx="30.2" cy="20" r="5.7" fill="#ef3340"/><polygon points="42,14 43.4,18.2 47.8,18.3 44.3,21 45.4,25.2 42,22.7 38.6,25.2 39.7,21 36.2,18.3 40.6,18.2" fill="#fff"/></svg>';
+      if (code === 'SYR') return '<svg viewBox="0 0 60 40" width="100%" height="100%"><rect width="60" height="13.33" fill="#ce1126"/><rect y="13.33" width="60" height="13.34" fill="#fff"/><rect y="26.67" width="60" height="13.33" fill="#000"/><polygon points="23,15 24.3,18.4 28,18.5 25.1,20.7 26.1,24 23,22 19.9,24 20.9,20.7 18,18.5 21.7,18.4" fill="#007a3d"/><polygon points="37,15 38.3,18.4 42,18.5 39.1,20.7 40.1,24 37,22 33.9,24 34.9,20.7 32,18.5 35.7,18.4" fill="#007a3d"/></svg>';
+      if (code === 'AFG') return '<svg viewBox="0 0 60 40" width="100%" height="100%"><rect width="20" height="40" fill="#000"/><rect x="20" width="20" height="40" fill="#d32011"/><rect x="40" width="20" height="40" fill="#007a36"/><circle cx="30" cy="20" r="6" fill="none" stroke="#fff" stroke-width="2"/><path d="M26 25 L34 25 L32 17 L28 17 Z" fill="#fff"/></svg>';
+      if (code === 'TKM') return '<svg viewBox="0 0 60 40" width="100%" height="100%"><rect width="60" height="40" fill="#00843d"/><rect x="8" width="8" height="40" fill="#7a1e2c"/><circle cx="35" cy="16" r="7" fill="#fff"/><circle cx="38" cy="16" r="6" fill="#00843d"/><polygon points="48,10 49.3,14.4 53.9,14.4 50.2,17 51.5,21.4 48,18.8 44.5,21.4 45.8,17 42.1,14.4 46.7,14.4" fill="#fff"/></svg>';
+      if (code === 'KURD') return '<svg viewBox="0 0 60 40" width="100%" height="100%"><rect width="60" height="13.33" fill="#d71920"/><rect y="13.33" width="60" height="13.34" fill="#fff"/><rect y="26.67" width="60" height="13.33" fill="#007a3d"/><circle cx="30" cy="20" r="6" fill="#f2c230"/><g stroke="#f2c230" stroke-width="1.4"><line x1="30" y1="9" x2="30" y2="15"/><line x1="30" y1="25" x2="30" y2="31"/><line x1="19" y1="20" x2="24" y2="20"/><line x1="36" y1="20" x2="41" y2="20"/><line x1="22" y1="12" x2="26" y2="16"/><line x1="34" y1="24" x2="38" y2="28"/><line x1="38" y1="12" x2="34" y2="16"/><line x1="26" y1="24" x2="22" y2="28"/></g></svg>';
       return '';
     }
 
@@ -1015,676 +840,342 @@
       ctx.save();
       roundRect(ctx, x, y, w, h, r || 5);
       ctx.clip();
-
-      if (code === 'TR') {
-        ctx.fillStyle = '#e30a17';
-        ctx.fillRect(x, y, w, h);
-        ctx.fillStyle = '#fff';
-        circle(x + w * 0.42, y + h * 0.5, h * 0.25);
-        ctx.fillStyle = '#e30a17';
-        circle(x + w * 0.47, y + h * 0.5, h * 0.20);
-        star(x + w * 0.66, y + h * 0.5, h * 0.13, h * 0.052, '#fff');
-      } else if (code === 'AZ') {
-        ctx.fillStyle = '#00b5e2';
-        ctx.fillRect(x, y, w, h / 3);
-        ctx.fillStyle = '#ef3340';
-        ctx.fillRect(x, y + h / 3, w, h / 3);
-        ctx.fillStyle = '#509e2f';
-        ctx.fillRect(x, y + h * 2 / 3, w, h / 3);
-        ctx.fillStyle = '#fff';
-        circle(x + w * 0.46, y + h * 0.5, h * 0.18);
-        ctx.fillStyle = '#ef3340';
-        circle(x + w * 0.51, y + h * 0.5, h * 0.15);
-        star(x + w * 0.67, y + h * 0.5, h * 0.11, h * 0.045, '#fff');
-      } else if (code === 'SYR') {
-        ctx.fillStyle = '#ce1126';
-        ctx.fillRect(x, y, w, h / 3);
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(x, y + h / 3, w, h / 3);
-        ctx.fillStyle = '#000';
-        ctx.fillRect(x, y + h * 2 / 3, w, h / 3);
-        star(x + w * 0.40, y + h * 0.5, h * 0.09, h * 0.038, '#007a3d');
-        star(x + w * 0.60, y + h * 0.5, h * 0.09, h * 0.038, '#007a3d');
-      } else if (code === 'AFG') {
-        ctx.fillStyle = '#000';
-        ctx.fillRect(x, y, w / 3, h);
-        ctx.fillStyle = '#d32011';
-        ctx.fillRect(x + w / 3, y, w / 3, h);
-        ctx.fillStyle = '#007a36';
-        ctx.fillRect(x + w * 2 / 3, y, w / 3, h);
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = Math.max(1, h * 0.06);
-        ctx.beginPath();
-        ctx.arc(x + w * 0.5, y + h * 0.52, h * 0.18, 0, Math.PI * 2);
-        ctx.stroke();
-      } else if (code === 'TKM') {
-        ctx.fillStyle = '#00843d';
-        ctx.fillRect(x, y, w, h);
-        ctx.fillStyle = '#7a1e2c';
-        ctx.fillRect(x + w * 0.12, y, w * 0.14, h);
-        ctx.fillStyle = '#fff';
-        circle(x + w * 0.58, y + h * 0.38, h * 0.18);
-        ctx.fillStyle = '#00843d';
-        circle(x + w * 0.63, y + h * 0.38, h * 0.15);
-        star(x + w * 0.78, y + h * 0.35, h * 0.10, h * 0.04, '#fff');
-      } else if (code === 'KURD') {
-        ctx.fillStyle = '#d71920';
-        ctx.fillRect(x, y, w, h / 3);
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(x, y + h / 3, w, h / 3);
-        ctx.fillStyle = '#007a3d';
-        ctx.fillRect(x, y + h * 2 / 3, w, h / 3);
-
-        const cx = x + w * 0.5;
-        const cy = y + h * 0.5;
-
-        ctx.strokeStyle = '#f2c230';
-        ctx.lineWidth = Math.max(1, h * 0.045);
-
-        for (let i = 0; i < 16; i++) {
-          const a = Math.PI * 2 * i / 16;
-          ctx.beginPath();
-          ctx.moveTo(cx + Math.cos(a) * h * 0.16, cy + Math.sin(a) * h * 0.16);
-          ctx.lineTo(cx + Math.cos(a) * h * 0.31, cy + Math.sin(a) * h * 0.31);
-          ctx.stroke();
-        }
-
-        ctx.fillStyle = '#f2c230';
-        circle(cx, cy, h * 0.16);
-      }
-
+      if (code === 'TR') { ctx.fillStyle = '#e30a17'; ctx.fillRect(x,y,w,h); ctx.fillStyle = '#fff'; circle(x+w*0.42,y+h*0.5,h*0.25); ctx.fillStyle = '#e30a17'; circle(x+w*0.47,y+h*0.5,h*0.20); star(x+w*0.66,y+h*0.5,h*0.13,h*0.052,'#fff'); }
+      else if (code === 'AZ') { ctx.fillStyle = '#00b5e2'; ctx.fillRect(x,y,w,h/3); ctx.fillStyle = '#ef3340'; ctx.fillRect(x,y+h/3,w,h/3); ctx.fillStyle = '#509e2f'; ctx.fillRect(x,y+h*2/3,w,h/3); ctx.fillStyle = '#fff'; circle(x+w*0.46,y+h*0.5,h*0.18); ctx.fillStyle = '#ef3340'; circle(x+w*0.51,y+h*0.5,h*0.15); star(x+w*0.67,y+h*0.5,h*0.11,h*0.045,'#fff'); }
+      else if (code === 'SYR') { ctx.fillStyle = '#ce1126'; ctx.fillRect(x,y,w,h/3); ctx.fillStyle = '#fff'; ctx.fillRect(x,y+h/3,w,h/3); ctx.fillStyle = '#000'; ctx.fillRect(x,y+h*2/3,w,h/3); star(x+w*0.40,y+h*0.5,h*0.09,h*0.038,'#007a3d'); star(x+w*0.60,y+h*0.5,h*0.09,h*0.038,'#007a3d'); }
+      else if (code === 'AFG') { ctx.fillStyle = '#000'; ctx.fillRect(x,y,w/3,h); ctx.fillStyle = '#d32011'; ctx.fillRect(x+w/3,y,w/3,h); ctx.fillStyle = '#007a36'; ctx.fillRect(x+w*2/3,y,w/3,h); ctx.strokeStyle = '#fff'; ctx.lineWidth = Math.max(1,h*0.06); ctx.beginPath(); ctx.arc(x+w*0.5,y+h*0.52,h*0.18,0,Math.PI*2); ctx.stroke(); }
+      else if (code === 'TKM') { ctx.fillStyle = '#00843d'; ctx.fillRect(x,y,w,h); ctx.fillStyle = '#7a1e2c'; ctx.fillRect(x+w*0.12,y,w*0.14,h); ctx.fillStyle = '#fff'; circle(x+w*0.58,y+h*0.38,h*0.18); ctx.fillStyle = '#00843d'; circle(x+w*0.63,y+h*0.38,h*0.15); star(x+w*0.78,y+h*0.35,h*0.10,h*0.04,'#fff'); }
+      else if (code === 'KURD') { ctx.fillStyle = '#d71920'; ctx.fillRect(x,y,w,h/3); ctx.fillStyle = '#fff'; ctx.fillRect(x,y+h/3,w,h/3); ctx.fillStyle = '#007a3d'; ctx.fillRect(x,y+h*2/3,w,h/3); const cx=x+w*0.5, cy=y+h*0.5; ctx.strokeStyle='#f2c230'; ctx.lineWidth=Math.max(1,h*0.045); for(let i=0;i<16;i++){const a=Math.PI*2*i/16;ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*h*0.16,cy+Math.sin(a)*h*0.16);ctx.lineTo(cx+Math.cos(a)*h*0.31,cy+Math.sin(a)*h*0.31);ctx.stroke();} ctx.fillStyle='#f2c230'; circle(cx,cy,h*0.16); }
       ctx.restore();
+      ctx.save(); roundRect(ctx,x,y,w,h,r||5); ctx.strokeStyle='rgba(255,255,255,0.82)'; ctx.lineWidth=1.5; ctx.stroke(); ctx.restore();
+    }
 
+    function drawLaneWinText(team, x, y, width) {
       ctx.save();
-      roundRect(ctx, x, y, w, h, r || 5);
-      ctx.strokeStyle = 'rgba(255,255,255,0.82)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.font = '1000 ' + (window.innerWidth <= 640 ? 10 : 12) + 'px system-ui';
+      ctx.fillStyle = '#fde68a';
+      ctx.strokeStyle = 'rgba(2,6,23,0.92)';
+      ctx.lineWidth = 3;
+      const text = team.raceWins + '/' + SERIES_TARGET;
+      ctx.strokeText(text, x + width / 2, y);
+      ctx.fillText(text, x + width / 2, y);
       ctx.restore();
     }
 
     function drawBackground(w, h) {
       ctx.clearRect(0, 0, w, h);
-
       const b = trackBounds();
       const laneGap = (b.bottom - b.top) / Math.max(1, teams.length - 1);
-
       const trackX = b.startX - (w <= 640 ? 44 : 64);
       const trackY = b.top - laneGap * 0.46;
       const trackW = b.finishX - b.startX + (w <= 640 ? 94 : 138);
       const trackH = (b.bottom - b.top) + laneGap * 0.92;
 
       const sky = ctx.createLinearGradient(0, 0, 0, h);
-      sky.addColorStop(0, '#020617');
-      sky.addColorStop(0.56, '#07111f');
-      sky.addColorStop(1, '#0f172a');
-      ctx.fillStyle = sky;
-      ctx.fillRect(0, 0, w, h);
+      sky.addColorStop(0, '#020617'); sky.addColorStop(0.56, '#07111f'); sky.addColorStop(1, '#0f172a');
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, w, h);
 
       ctx.save();
       const light = ctx.createRadialGradient(w * 0.65, h * 0.12, 20, w * 0.65, h * 0.12, 520);
-      light.addColorStop(0, 'rgba(96,165,250,0.30)');
-      light.addColorStop(1, 'rgba(96,165,250,0)');
-      ctx.fillStyle = light;
-      ctx.fillRect(0, 0, w, h);
+      light.addColorStop(0, 'rgba(96,165,250,0.30)'); light.addColorStop(1, 'rgba(96,165,250,0)');
+      ctx.fillStyle = light; ctx.fillRect(0, 0, w, h);
       ctx.restore();
 
       ctx.save();
       const asphalt = ctx.createLinearGradient(0, trackY, 0, trackY + trackH);
-      asphalt.addColorStop(0, '#101827');
-      asphalt.addColorStop(0.50, '#202a3b');
-      asphalt.addColorStop(1, '#0b1220');
-
-      ctx.fillStyle = asphalt;
-      roundRect(ctx, trackX, trackY, trackW, trackH, 28);
-      ctx.fill();
-
+      asphalt.addColorStop(0, '#101827'); asphalt.addColorStop(0.50, '#202a3b'); asphalt.addColorStop(1, '#0b1220');
+      ctx.fillStyle = asphalt; roundRect(ctx, trackX, trackY, trackW, trackH, 28); ctx.fill();
       ctx.globalAlpha = 0.10;
       const noiseCount = w <= 640 ? 260 : 900;
-
       for (let i = 0; i < noiseCount; i++) {
         const px = trackX + pseudo(i, 12.98) * trackW;
         const py = trackY + pseudo(i, 78.23) * trackH;
         ctx.fillStyle = i % 3 === 0 ? '#ffffff' : '#020617';
         ctx.fillRect(px, py, 1.1, 1.1);
       }
-
       ctx.globalAlpha = 1;
-
-      ctx.strokeStyle = 'rgba(226,232,240,0.28)';
-      ctx.lineWidth = 2;
-      roundRect(ctx, trackX, trackY, trackW, trackH, 28);
-      ctx.stroke();
-
-      ctx.strokeStyle = 'rgba(59,130,246,0.40)';
-      ctx.lineWidth = 1;
-      roundRect(ctx, trackX + 5, trackY + 5, trackW - 10, trackH - 10, 24);
-      ctx.stroke();
-      ctx.restore();
-
-      const midX = scoreToX(MID_SCORE, b);
-
-      ctx.save();
-      ctx.strokeStyle = 'rgba(147,197,253,0.42)';
-      ctx.lineWidth = 3;
-      ctx.setLineDash([8, 8]);
-      ctx.beginPath();
-      ctx.moveTo(midX, trackY + 10);
-      ctx.lineTo(midX, trackY + trackH - 10);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = 'rgba(147,197,253,0.86)';
-      ctx.font = '900 10px system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText('200', midX, trackY + 17);
+      ctx.strokeStyle = 'rgba(226,232,240,0.28)'; ctx.lineWidth = 2; roundRect(ctx, trackX, trackY, trackW, trackH, 28); ctx.stroke();
+      ctx.strokeStyle = 'rgba(59,130,246,0.40)'; ctx.lineWidth = 1; roundRect(ctx, trackX+5, trackY+5, trackW-10, trackH-10, 24); ctx.stroke();
       ctx.restore();
 
       teams.forEach((team, i) => {
         const y = b.top + i * laneGap;
-
         ctx.save();
-
-        const laneGrad = ctx.createLinearGradient(trackX, y - laneGap * 0.42, trackX, y + laneGap * 0.42);
+        const laneGrad = ctx.createLinearGradient(trackX, y - laneGap*0.42, trackX, y + laneGap*0.42);
         laneGrad.addColorStop(0, 'rgba(255,255,255,0.012)');
         laneGrad.addColorStop(0.5, i % 2 === 0 ? 'rgba(255,255,255,0.045)' : 'rgba(255,255,255,0.026)');
         laneGrad.addColorStop(1, 'rgba(0,0,0,0.08)');
-
-        ctx.fillStyle = laneGrad;
-        roundRect(ctx, trackX + 8, y - laneGap * 0.39, trackW - 16, laneGap * 0.78, 16);
-        ctx.fill();
-
-        ctx.strokeStyle = 'rgba(226,232,240,0.16)';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(b.startX - 28, y + laneGap * 0.39);
-        ctx.lineTo(b.finishX + 8, y + laneGap * 0.39);
-        ctx.stroke();
-
-        for (let rx = b.startX - 10; rx < b.finishX - 10; rx += 112) {
-          ctx.fillStyle = 'rgba(253,230,138,0.45)';
-          roundRect(ctx, rx, y - 3, 32, 6, 4);
-          ctx.fill();
-        }
-
+        ctx.fillStyle = laneGrad; roundRect(ctx, trackX+8, y-laneGap*0.39, trackW-16, laneGap*0.78, 16); ctx.fill();
+        ctx.strokeStyle = 'rgba(226,232,240,0.16)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(b.startX-28, y+laneGap*0.39); ctx.lineTo(b.finishX+8, y+laneGap*0.39); ctx.stroke();
+        for (let rx = b.startX - 10; rx < b.finishX - 10; rx += 112) { ctx.fillStyle = 'rgba(253,230,138,0.45)'; roundRect(ctx, rx, y-3, 32, 6, 4); ctx.fill(); }
         drawFlagCanvas(team.code, b.startX - (w <= 640 ? 48 : 64), y - 17, w <= 640 ? 38 : 48, w <= 640 ? 25 : 32, 7);
-
+        drawLaneWinText(team, b.startX - (w <= 640 ? 48 : 64), y + (w <= 640 ? 17 : 22), w <= 640 ? 38 : 48);
         ctx.restore();
       });
 
       ctx.save();
-      ctx.strokeStyle = 'rgba(253,230,138,0.92)';
-      ctx.lineWidth = 5;
-      ctx.setLineDash([11, 9]);
-      ctx.beginPath();
-      ctx.moveTo(b.finishX, trackY + 12);
-      ctx.lineTo(b.finishX, trackY + trackH - 12);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
+      ctx.strokeStyle = 'rgba(253,230,138,0.92)'; ctx.lineWidth = 5; ctx.setLineDash([11, 9]);
+      ctx.beginPath(); ctx.moveTo(b.finishX, trackY+12); ctx.lineTo(b.finishX, trackY+trackH-12); ctx.stroke(); ctx.setLineDash([]);
       const square = w <= 640 ? 8 : 10;
-
       for (let yy = trackY + 12; yy < trackY + trackH - 12; yy += square) {
-        for (let xx = 0; xx < 3; xx++) {
-          ctx.fillStyle = ((Math.floor((yy - trackY) / square) + xx) % 2 === 0) ? '#f8fafc' : '#020617';
-          ctx.fillRect(b.finishX + 8 + xx * square, yy, square, square);
-        }
+        for (let xx = 0; xx < 3; xx++) { ctx.fillStyle = ((Math.floor((yy-trackY)/square)+xx)%2===0) ? '#f8fafc' : '#020617'; ctx.fillRect(b.finishX+8+xx*square, yy, square, square); }
       }
-
       ctx.restore();
     }
 
-    function pseudo(i, salt) {
-      return ((Math.sin(i * salt) * 43758.5453) % 1 + 1) % 1;
-    }
-
-    function carScale() {
-      const w = window.innerWidth;
-      return w <= 640 ? 0.66 : w <= 1050 ? 0.80 : 0.92;
-    }
-
-    function carWidth(team) {
-      return getCarSpecs(team.carType).w * carScale();
-    }
-
+    function pseudo(i, salt) { return ((Math.sin(i * salt) * 43758.5453) % 1 + 1) % 1; }
+    function carScale() { const w = window.innerWidth; const h = window.innerHeight; return w <= 640 ? (h <= 620 ? 0.68 : 0.76) : w <= 1050 ? 0.92 : 1.08; }
+    function carWidth(team) { return getCarSpecs(team.carType).w * carScale(); }
     function getCarSpecs(type) {
-      const specs = {
-        gt: { w: 148, h: 56, wheel: 16, ground: 30, spoiler: true, roof: 0.42 },
-        rally: { w: 138, h: 62, wheel: 17, ground: 33, spoiler: true, roof: 0.54 },
-        muscle: { w: 154, h: 58, wheel: 17, ground: 31, spoiler: false, roof: 0.40 },
-        suv: { w: 142, h: 70, wheel: 19, ground: 38, spoiler: false, roof: 0.52 },
-        hyper: { w: 152, h: 52, wheel: 16, ground: 28, spoiler: true, roof: 0.34 },
-        formula: { w: 158, h: 46, wheel: 18, ground: 26, spoiler: true, roof: 0.24 }
-      };
-
-      return specs[type] || specs.gt;
+      return {
+        gt:{w:148,h:56,wheel:16,ground:30,spoiler:true,roof:0.42},
+        rally:{w:138,h:62,wheel:17,ground:33,spoiler:true,roof:0.54},
+        muscle:{w:154,h:58,wheel:17,ground:31,spoiler:false,roof:0.40},
+        suv:{w:142,h:70,wheel:19,ground:38,spoiler:false,roof:0.52},
+        hyper:{w:152,h:52,wheel:16,ground:28,spoiler:true,roof:0.34},
+        formula:{w:158,h:46,wheel:18,ground:26,spoiler:true,roof:0.24}
+      }[type] || {w:144,h:56,wheel:16,ground:30,spoiler:true,roof:0.4};
     }
 
     function drawCar(team) {
-      const x = team.x;
-      const y = team.y;
-
+      const x = team.x, y = team.y;
       const scale = carScale() * (1 + team.pulse * 0.035);
       const specs = getCarSpecs(team.carType);
-
       const carW = specs.w * scale;
       const carH = specs.h * scale;
       const bodyY = y - carH * 0.04;
 
       ctx.save();
       ctx.globalAlpha = 0.20 + team.glow * 0.28;
-
       const glow = ctx.createRadialGradient(x, y, 12, x, y, 112 * carScale());
-      glow.addColorStop(0, team.color);
-      glow.addColorStop(1, 'rgba(255,255,255,0)');
-
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.ellipse(x, y, 124 * carScale(), 50 * carScale(), 0, 0, Math.PI * 2);
-      ctx.fill();
-
+      glow.addColorStop(0, team.color); glow.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.ellipse(x, y, 124*carScale(), 50*carScale(), 0, 0, Math.PI*2); ctx.fill();
       ctx.restore();
 
       ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.54)';
-      ctx.shadowBlur = 18;
-      ctx.shadowOffsetY = 10;
-
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
-      ctx.beginPath();
-      ctx.ellipse(x - 3 * scale, y + specs.ground * scale, carW * 0.50, 9 * scale, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (team.carType === 'formula') {
-        drawFormulaBody(team, x, bodyY, carW, carH, scale);
-      } else if (team.carType === 'suv') {
-        drawSuvBody(team, x, bodyY, carW, carH, scale);
-      } else if (team.carType === 'muscle') {
-        drawMuscleBody(team, x, bodyY, carW, carH, scale);
-      } else {
-        drawSportBody(team, x, bodyY, carW, carH, scale, specs.roof);
-      }
-
+      ctx.shadowColor = 'rgba(0,0,0,0.54)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 10;
+      ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.ellipse(x-3*scale, y+specs.ground*scale, carW*0.50, 9*scale, 0, 0, Math.PI*2); ctx.fill();
+      if (team.carType === 'formula') drawFormulaBody(team, x, bodyY, carW, carH, scale);
+      else if (team.carType === 'suv') drawSuvBody(team, x, bodyY, carW, carH, scale);
+      else if (team.carType === 'muscle') drawMuscleBody(team, x, bodyY, carW, carH, scale);
+      else drawSportBody(team, x, bodyY, carW, carH, scale, specs.roof);
       ctx.shadowColor = 'transparent';
       drawCarDetails(team, x, y, bodyY, carW, carH, scale, specs);
       ctx.restore();
     }
 
     function drawSportBody(team, x, bodyY, carW, carH, scale, roof) {
-      const metallic = ctx.createLinearGradient(x - carW * 0.5, bodyY - carH * 0.35, x + carW * 0.5, bodyY + carH * 0.3);
-      metallic.addColorStop(0, darkenColor(team.color, 0.35));
-      metallic.addColorStop(0.28, team.color);
-      metallic.addColorStop(0.62, darkenColor(team.color, 0.05));
-      metallic.addColorStop(1, darkenColor(team.color, 0.42));
-
+      const metallic = ctx.createLinearGradient(x-carW*0.5, bodyY-carH*0.35, x+carW*0.5, bodyY+carH*0.3);
+      metallic.addColorStop(0, darkenColor(team.color, 0.35)); metallic.addColorStop(0.28, team.color); metallic.addColorStop(0.62, darkenColor(team.color, 0.05)); metallic.addColorStop(1, darkenColor(team.color, 0.42));
       ctx.fillStyle = metallic;
       ctx.beginPath();
-      ctx.moveTo(x - carW * 0.52, bodyY + carH * 0.15);
-      ctx.quadraticCurveTo(x - carW * 0.46, bodyY - carH * 0.12, x - carW * 0.20, bodyY - carH * 0.17);
-      ctx.lineTo(x + carW * 0.42, bodyY - carH * 0.13);
-      ctx.quadraticCurveTo(x + carW * 0.58, bodyY, x + carW * 0.55, bodyY + carH * 0.18);
-      ctx.lineTo(x + carW * 0.44, bodyY + carH * 0.28);
-      ctx.lineTo(x - carW * 0.45, bodyY + carH * 0.28);
-      ctx.closePath();
-      ctx.fill();
-
+      ctx.moveTo(x-carW*0.52, bodyY+carH*0.15);
+      ctx.quadraticCurveTo(x-carW*0.46, bodyY-carH*0.12, x-carW*0.20, bodyY-carH*0.17);
+      ctx.lineTo(x+carW*0.42, bodyY-carH*0.13);
+      ctx.quadraticCurveTo(x+carW*0.58, bodyY, x+carW*0.55, bodyY+carH*0.18);
+      ctx.lineTo(x+carW*0.44, bodyY+carH*0.28);
+      ctx.lineTo(x-carW*0.45, bodyY+carH*0.28);
+      ctx.closePath(); ctx.fill();
       ctx.fillStyle = lightenColor(team.color, 0.10);
-      roundRect(ctx, x - carW * 0.18, bodyY - carH * 0.38, carW * roof, carH * 0.30, 12 * scale);
-      ctx.fill();
+      roundRect(ctx, x-carW*0.18, bodyY-carH*0.38, carW*roof, carH*0.30, 12*scale); ctx.fill();
     }
 
     function drawMuscleBody(team, x, bodyY, carW, carH, scale) {
-      const metallic = ctx.createLinearGradient(x - carW * 0.5, bodyY - carH * 0.35, x + carW * 0.5, bodyY + carH * 0.3);
-      metallic.addColorStop(0, darkenColor(team.color, 0.44));
-      metallic.addColorStop(0.38, team.color);
-      metallic.addColorStop(1, darkenColor(team.color, 0.38));
-
+      const metallic = ctx.createLinearGradient(x-carW*0.5, bodyY-carH*0.35, x+carW*0.5, bodyY+carH*0.3);
+      metallic.addColorStop(0, darkenColor(team.color, 0.44)); metallic.addColorStop(0.38, team.color); metallic.addColorStop(1, darkenColor(team.color, 0.38));
       ctx.fillStyle = metallic;
       ctx.beginPath();
-      ctx.moveTo(x - carW * 0.54, bodyY + carH * 0.14);
-      ctx.lineTo(x - carW * 0.46, bodyY - carH * 0.11);
-      ctx.lineTo(x + carW * 0.43, bodyY - carH * 0.14);
-      ctx.lineTo(x + carW * 0.56, bodyY + carH * 0.10);
-      ctx.lineTo(x + carW * 0.48, bodyY + carH * 0.25);
-      ctx.lineTo(x - carW * 0.50, bodyY + carH * 0.25);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = lightenColor(team.color, 0.05);
-      roundRect(ctx, x - carW * 0.15, bodyY - carH * 0.42, carW * 0.36, carH * 0.32, 8 * scale);
-      ctx.fill();
+      ctx.moveTo(x-carW*0.54, bodyY+carH*0.14); ctx.lineTo(x-carW*0.46, bodyY-carH*0.11); ctx.lineTo(x+carW*0.43, bodyY-carH*0.14); ctx.lineTo(x+carW*0.56, bodyY+carH*0.10); ctx.lineTo(x+carW*0.48, bodyY+carH*0.25); ctx.lineTo(x-carW*0.50, bodyY+carH*0.25); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = lightenColor(team.color, 0.05); roundRect(ctx, x-carW*0.15, bodyY-carH*0.42, carW*0.36, carH*0.32, 8*scale); ctx.fill();
     }
 
     function drawSuvBody(team, x, bodyY, carW, carH, scale) {
-      ctx.fillStyle = darkenColor(team.color, 0.24);
-      roundRect(ctx, x - carW * 0.48, bodyY - carH * 0.08, carW * 0.96, carH * 0.49, 11 * scale);
-      ctx.fill();
-
-      ctx.fillStyle = team.color;
-      roundRect(ctx, x - carW * 0.27, bodyY - carH * 0.48, carW * 0.50, carH * 0.43, 10 * scale);
-      ctx.fill();
-
-      ctx.fillStyle = 'rgba(15,23,42,0.92)';
-      roundRect(ctx, x - carW * 0.43, bodyY - carH * 0.27, carW * 0.12, carH * 0.17, 3 * scale);
-      ctx.fill();
+      ctx.fillStyle = darkenColor(team.color, 0.24); roundRect(ctx, x-carW*0.48, bodyY-carH*0.08, carW*0.96, carH*0.49, 11*scale); ctx.fill();
+      ctx.fillStyle = team.color; roundRect(ctx, x-carW*0.27, bodyY-carH*0.48, carW*0.50, carH*0.43, 10*scale); ctx.fill();
+      ctx.fillStyle = 'rgba(15,23,42,0.92)'; roundRect(ctx, x-carW*0.43, bodyY-carH*0.27, carW*0.12, carH*0.17, 3*scale); ctx.fill();
     }
 
     function drawFormulaBody(team, x, bodyY, carW, carH, scale) {
       ctx.fillStyle = darkenColor(team.color, 0.08);
-      ctx.beginPath();
-      ctx.moveTo(x - carW * 0.52, bodyY + carH * 0.02);
-      ctx.lineTo(x - carW * 0.14, bodyY - carH * 0.13);
-      ctx.lineTo(x + carW * 0.58, bodyY - carH * 0.02);
-      ctx.lineTo(x + carW * 0.64, bodyY + carH * 0.12);
-      ctx.lineTo(x - carW * 0.40, bodyY + carH * 0.19);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = team.color;
-      roundRect(ctx, x - carW * 0.20, bodyY - carH * 0.22, carW * 0.25, carH * 0.24, 8 * scale);
-      ctx.fill();
-
-      ctx.fillStyle = darkenColor(team.color, 0.30);
-      roundRect(ctx, x - carW * 0.60, bodyY - carH * 0.02, carW * 0.13, carH * 0.20, 4 * scale);
-      ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x-carW*0.52, bodyY+carH*0.02); ctx.lineTo(x-carW*0.14, bodyY-carH*0.13); ctx.lineTo(x+carW*0.58, bodyY-carH*0.02); ctx.lineTo(x+carW*0.64, bodyY+carH*0.12); ctx.lineTo(x-carW*0.40, bodyY+carH*0.19); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = team.color; roundRect(ctx, x-carW*0.20, bodyY-carH*0.22, carW*0.25, carH*0.24, 8*scale); ctx.fill();
+      ctx.fillStyle = darkenColor(team.color, 0.30); roundRect(ctx, x-carW*0.60, bodyY-carH*0.02, carW*0.13, carH*0.20, 4*scale); ctx.fill();
     }
 
     function drawCarDetails(team, x, y, bodyY, carW, carH, scale, specs) {
       ctx.fillStyle = 'rgba(219,234,254,0.88)';
-      roundRect(ctx, x - carW * 0.13, bodyY - carH * 0.32, carW * 0.16, carH * 0.17, 5 * scale);
-      ctx.fill();
-
-      roundRect(ctx, x + carW * 0.06, bodyY - carH * 0.32, carW * 0.14, carH * 0.17, 5 * scale);
-      ctx.fill();
+      roundRect(ctx, x-carW*0.13, bodyY-carH*0.32, carW*0.16, carH*0.17, 5*scale); ctx.fill();
+      roundRect(ctx, x+carW*0.06, bodyY-carH*0.32, carW*0.14, carH*0.17, 5*scale); ctx.fill();
 
       ctx.fillStyle = 'rgba(255,255,255,0.18)';
-      ctx.beginPath();
-      ctx.moveTo(x - carW * 0.43, bodyY - carH * 0.02);
-      ctx.lineTo(x + carW * 0.37, bodyY - carH * 0.08);
-      ctx.lineTo(x + carW * 0.43, bodyY - carH * 0.02);
-      ctx.lineTo(x - carW * 0.37, bodyY + carH * 0.06);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = 'rgba(253,230,138,0.98)';
-      ctx.beginPath();
-      ctx.moveTo(x + carW * 0.46, bodyY + carH * 0.02);
-      ctx.lineTo(x + carW * 0.59, bodyY + carH * 0.07);
-      ctx.lineTo(x + carW * 0.47, bodyY + carH * 0.16);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = 'rgba(248,113,113,0.94)';
-      roundRect(ctx, x - carW * 0.53, bodyY + carH * 0.02, carW * 0.05, carH * 0.15, 3 * scale);
-      ctx.fill();
-
-      if (specs.spoiler) {
-        ctx.fillStyle = darkenColor(team.color, 0.32);
-        roundRect(ctx, x - carW * 0.53, bodyY - carH * 0.23, carW * 0.19, carH * 0.06, 3 * scale);
-        ctx.fill();
-      }
+      ctx.beginPath(); ctx.moveTo(x-carW*0.43, bodyY-carH*0.02); ctx.lineTo(x+carW*0.37, bodyY-carH*0.08); ctx.lineTo(x+carW*0.43, bodyY-carH*0.02); ctx.lineTo(x-carW*0.37, bodyY+carH*0.06); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(253,230,138,0.98)'; ctx.beginPath(); ctx.moveTo(x+carW*0.46, bodyY+carH*0.02); ctx.lineTo(x+carW*0.59, bodyY+carH*0.07); ctx.lineTo(x+carW*0.47, bodyY+carH*0.16); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(248,113,113,0.94)'; roundRect(ctx, x-carW*0.53, bodyY+carH*0.02, carW*0.05, carH*0.15, 3*scale); ctx.fill();
+      if (specs.spoiler) { ctx.fillStyle = darkenColor(team.color,0.32); roundRect(ctx, x-carW*0.53, bodyY-carH*0.23, carW*0.19, carH*0.06, 3*scale); ctx.fill(); }
 
       const sideFlagW = Math.min(carW * 0.54, carH * 1.72);
       const sideFlagH = sideFlagW * 0.66;
       drawFlagCanvas(team.code, x - sideFlagW * 0.34, bodyY - sideFlagH * 0.32, sideFlagW, sideFlagH, 7 * scale);
-
       const wheelY = y + specs.ground * scale;
-      drawWheel(x - carW * 0.31, wheelY, specs.wheel * scale, team.accent);
-      drawWheel(x + carW * 0.32, wheelY, specs.wheel * scale, team.accent);
+      drawWheel(x-carW*0.31, wheelY, specs.wheel*scale, team.accent);
+      drawWheel(x+carW*0.32, wheelY, specs.wheel*scale, team.accent);
 
-      ctx.fillStyle = 'rgba(255,255,255,0.96)';
-      ctx.font = '950 ' + Math.max(10, 13 * scale) + 'px system-ui';
+      drawCarWinText(team, x, y - carH * 0.48, scale);
+      drawCarGloss(team, x, bodyY, carW, carH, scale);
+
+      const scoreFont = window.innerWidth <= 640 ? Math.max(24, 34 * scale) : Math.max(34, 44 * scale);
+      ctx.fillStyle = 'rgba(255,255,255,0.98)';
+      ctx.font = '1000 ' + scoreFont + 'px system-ui';
       ctx.textAlign = 'center';
-      ctx.strokeStyle = 'rgba(2,6,23,0.80)';
-      ctx.lineWidth = 4;
-      ctx.strokeText(team.score, x, y - carH * 0.72);
-      ctx.fillText(team.score, x, y - carH * 0.72);
+      ctx.strokeStyle = 'rgba(2,6,23,0.92)';
+      ctx.lineWidth = Math.max(5, scoreFont * 0.22);
+      const scoreY = y - carH * 0.82;
+      ctx.strokeText(team.score, x, scoreY);
+      ctx.fillText(team.score, x, scoreY);
+    }
+
+    function drawCarWinText(team, x, y, scale) {
+      const fontSize = Math.max(11, 14 * scale);
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.font = '1000 ' + fontSize + 'px system-ui';
+      ctx.fillStyle = '#fde68a';
+      ctx.strokeStyle = 'rgba(2,6,23,0.94)';
+      ctx.lineWidth = Math.max(4, fontSize * 0.28);
+      const text = team.raceWins + '/' + SERIES_TARGET;
+      ctx.strokeText(text, x, y);
+      ctx.fillText(text, x, y);
+      ctx.restore();
+    }
+
+    function drawCarGloss(team, x, bodyY, carW, carH, scale) {
+      ctx.save();
+      ctx.globalAlpha = 0.92;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(255,255,255,0.50)';
+      ctx.lineWidth = Math.max(2, 3.2 * scale);
+      ctx.beginPath();
+      ctx.moveTo(x - carW * 0.35, bodyY - carH * 0.04);
+      ctx.quadraticCurveTo(x - carW * 0.05, bodyY - carH * 0.19, x + carW * 0.34, bodyY - carH * 0.09);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(253,230,138,0.72)';
+      ctx.lineWidth = Math.max(2, 2.4 * scale);
+      ctx.beginPath();
+      ctx.moveTo(x - carW * 0.40, bodyY + carH * 0.20);
+      ctx.lineTo(x + carW * 0.38, bodyY + carH * 0.20);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(255,255,255,0.18)';
+      ctx.beginPath();
+      ctx.ellipse(x + carW * 0.52, bodyY + carH * 0.10, carW * 0.12, carH * 0.10, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
     function drawWheel(x, y, r, accent) {
-      ctx.save();
-
-      ctx.fillStyle = '#020617';
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#334155';
-      ctx.beginPath();
-      ctx.arc(x, y, r * 0.70, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = accent;
-      ctx.beginPath();
-      ctx.arc(x, y, r * 0.34, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = 'rgba(255,255,255,0.38)';
-      ctx.lineWidth = Math.max(1, r * 0.12);
-      ctx.beginPath();
-      ctx.arc(x, y, r * 0.47, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.restore();
+      ctx.save(); ctx.fillStyle = '#020617'; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.arc(x,y,r*0.70,0,Math.PI*2); ctx.fill(); ctx.fillStyle = accent; ctx.beginPath(); ctx.arc(x,y,r*0.34,0,Math.PI*2); ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.38)'; ctx.lineWidth = Math.max(1, r*0.12); ctx.beginPath(); ctx.arc(x,y,r*0.47,0,Math.PI*2); ctx.stroke(); ctx.restore();
     }
 
     function drawPersistentFrontGift(team, time) {
       const giftName = TEAM_DEFAULT_GIFT[team.code] || 'Rose';
       const img = giftImages[giftName];
-
       const cw = carWidth(team);
-      const size = window.innerWidth <= 640 ? 36 : 50;
+      const size = window.innerWidth <= 640 ? 38 : 54;
       const flow = (Math.sin(time * 2.4 + team.lane * 0.9) * 0.5 + 0.5);
       const extraFront = 34 + flow * 34;
       const x = team.x + cw * 0.54 + extraFront;
       const y = team.y - size * 0.55 + Math.sin(time * 3.0 + team.lane) * 4;
-
-      ctx.save();
-
-      ctx.globalAlpha = 0.96;
-      ctx.shadowColor = 'rgba(255,255,255,0.18)';
-      ctx.shadowBlur = 14;
-      ctx.shadowOffsetY = 4;
-
-      ctx.fillStyle = 'rgba(255,255,255,0.10)';
-      ctx.beginPath();
-      ctx.arc(x, y, size * 0.70, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (img && img.complete && img.naturalWidth > 0) {
-        ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
-      } else {
-        drawTikTokGiftBadge(x, y, size, giftName, team.color);
-      }
-
-      ctx.restore();
+      drawGiftImage(img, x, y, size, team.color);
     }
 
     function spawnGiftSprite(team, giftName, points) {
-      giftSprites.push({
-        team,
-        giftName: giftName || 'Rose',
-        points,
-        age: 0,
-        life: 1.12,
-        startOffset: 18,
-        endOffset: 94,
-        bob: Math.random() * Math.PI * 2
-      });
+      giftSprites.push({ team, giftName: giftName || 'Rose', points, age: 0, life: 1.12, startOffset: 18, endOffset: 94, bob: Math.random() * Math.PI * 2 });
     }
 
     function drawGiftSprites(dt) {
       for (let i = giftSprites.length - 1; i >= 0; i--) {
         const g = giftSprites[i];
         g.age += dt;
-
         const t = Math.min(1, g.age / g.life);
-
-        if (t >= 1) {
-          giftSprites.splice(i, 1);
-          continue;
-        }
-
+        if (t >= 1) { giftSprites.splice(i, 1); continue; }
         const cw = carWidth(g.team);
-        const size = (window.innerWidth <= 640 ? 42 : 60) * (1 + Math.sin(t * Math.PI) * 0.25);
+        const size = (window.innerWidth <= 640 ? 46 : 66) * (1 + Math.sin(t * Math.PI) * 0.25);
         const x = g.team.x + cw * 0.52 + g.startOffset + (g.endOffset - g.startOffset) * easeOutCubic(t);
         const y = g.team.y - size * 0.62 + Math.sin(g.bob + t * Math.PI * 4) * 6;
         const alpha = 1 - Math.max(0, (t - 0.78) / 0.22);
-
         ctx.save();
-
         ctx.globalAlpha = alpha;
-        ctx.shadowColor = 'rgba(0,0,0,0.45)';
-        ctx.shadowBlur = 16;
-        ctx.shadowOffsetY = 6;
-
-        ctx.fillStyle = 'rgba(255,255,255,0.12)';
-        ctx.beginPath();
-        ctx.arc(x, y, size * 0.72, 0, Math.PI * 2);
-        ctx.fill();
-
-        const img = giftImages[g.giftName];
-
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
-        } else {
-          drawTikTokGiftBadge(x, y, size, g.giftName, g.team.color);
-        }
-
+        drawGiftImage(giftImages[g.giftName], x, y, size, g.team.color);
         ctx.shadowColor = 'transparent';
-
         ctx.fillStyle = '#fff';
-        ctx.font = '950 ' + Math.max(11, size * 0.28) + 'px system-ui';
+        ctx.font = '1000 ' + Math.max(15, size * 0.34) + 'px system-ui';
         ctx.textAlign = 'center';
-        ctx.strokeStyle = 'rgba(2,6,23,0.88)';
-        ctx.lineWidth = 4;
-
+        ctx.strokeStyle = 'rgba(2,6,23,0.90)';
+        ctx.lineWidth = 5;
         const txt = '+' + g.points;
-        ctx.strokeText(txt, x, y + size * 0.80);
-        ctx.fillText(txt, x, y + size * 0.80);
-
+        ctx.strokeText(txt, x, y + size * 0.82);
+        ctx.fillText(txt, x, y + size * 0.82);
         ctx.restore();
       }
     }
 
-    function drawTikTokGiftBadge(x, y, size, giftName, color) {
-      const short = GIFT_SHORT[giftName] || String(giftName || 'GIFT').slice(0, 5).toLocaleUpperCase('tr-TR');
-
+    function drawGiftImage(img, x, y, size, color) {
       ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.48)';
+      ctx.shadowBlur = 16;
+      ctx.shadowOffsetY = 6;
+      ctx.fillStyle = 'rgba(255,255,255,0.13)';
+      ctx.beginPath(); ctx.arc(x, y, size * 0.70, 0, Math.PI * 2); ctx.fill();
+      if (img && img.complete && img.naturalWidth > 0 && img.dataset.failed !== '1') {
+        ctx.drawImage(img, x - size / 2, y - size / 2, size, size);
+      } else {
+        drawFallbackOrb(x, y, size, color);
+      }
+      ctx.restore();
+    }
 
+    function drawFallbackOrb(x, y, size, color) {
       const grad = ctx.createRadialGradient(x - size * 0.15, y - size * 0.20, 2, x, y, size * 0.68);
       grad.addColorStop(0, '#ffffff');
-      grad.addColorStop(0.28, lightenColor(color, 0.55));
+      grad.addColorStop(0.30, lightenColor(color, 0.55));
       grad.addColorStop(1, darkenColor(color, 0.15));
-
       ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(x, y, size * 0.48, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = 'rgba(255,255,255,0.86)';
-      ctx.lineWidth = Math.max(1.4, size * 0.045);
-      ctx.beginPath();
-      ctx.arc(x, y, size * 0.48, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.fillStyle = 'rgba(2,6,23,0.90)';
-      ctx.font = '950 ' + Math.max(8, size * 0.19) + 'px system-ui';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(short, x, y - size * 0.03);
-
-      ctx.fillStyle = '#fde68a';
-      ctx.font = '950 ' + Math.max(7, size * 0.14) + 'px system-ui';
-      ctx.fillText('1c', x, y + size * 0.20);
-
-      ctx.restore();
+      ctx.beginPath(); ctx.arc(x, y, size * 0.48, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.86)'; ctx.lineWidth = Math.max(1.4, size * 0.045); ctx.stroke();
     }
 
     function drawParticles(dt) {
       for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-
-        p.life -= dt;
-        p.x += p.vx * dt * 60;
-        p.y += p.vy * dt * 60;
-        p.vx *= 0.985;
-        p.vy *= 0.985;
-
-        if (p.life <= 0) {
-          particles.splice(i, 1);
-          continue;
-        }
-
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
+        const p = particles[i]; p.life -= dt; p.x += p.vx * dt * 60; p.y += p.vy * dt * 60; p.vx *= 0.985; p.vy *= 0.985;
+        if (p.life <= 0) { particles.splice(i,1); continue; }
+        ctx.save(); ctx.globalAlpha = Math.max(0, p.life / p.maxLife); ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill(); ctx.restore();
       }
     }
 
     function drawSpeedLines(dt) {
       for (let i = speedLines.length - 1; i >= 0; i--) {
-        const s = speedLines[i];
-
-        s.life -= dt;
-        s.x -= 2.2 * dt * 60;
-
-        if (s.life <= 0) {
-          speedLines.splice(i, 1);
-          continue;
-        }
-
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, s.life / s.maxLife) * 0.55;
-        ctx.strokeStyle = '#e0f2fe';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(s.x, s.y);
-        ctx.lineTo(s.x - s.len, s.y);
-        ctx.stroke();
-        ctx.restore();
+        const s = speedLines[i]; s.life -= dt; s.x -= 2.2 * dt * 60;
+        if (s.life <= 0) { speedLines.splice(i,1); continue; }
+        ctx.save(); ctx.globalAlpha = Math.max(0, s.life / s.maxLife) * 0.55; ctx.strokeStyle = '#e0f2fe'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(s.x-s.len,s.y); ctx.stroke(); ctx.restore();
       }
     }
 
     function drawFloatingTexts(dt) {
       for (let i = floatingTexts.length - 1; i >= 0; i--) {
-        const f = floatingTexts[i];
-
-        f.age += dt;
-        f.life -= dt;
-        f.y -= dt * 28;
-
-        if (f.life <= 0) {
-          floatingTexts.splice(i, 1);
-          continue;
-        }
-
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, f.life);
-        ctx.textAlign = 'center';
-        ctx.font = '950 18px system-ui';
-        ctx.strokeStyle = 'rgba(2,6,23,0.85)';
-        ctx.lineWidth = 5;
-        ctx.strokeText(f.text, f.x, f.y);
-        ctx.fillStyle = '#fff';
-        ctx.fillText(f.text, f.x, f.y);
-        ctx.restore();
+        const f = floatingTexts[i]; f.age += dt; f.life -= dt; f.y -= dt * 28;
+        if (f.life <= 0) { floatingTexts.splice(i,1); continue; }
+        ctx.save(); ctx.globalAlpha = Math.max(0, f.life); ctx.textAlign = 'center'; ctx.font = '1000 22px system-ui'; ctx.strokeStyle = 'rgba(2,6,23,0.88)'; ctx.lineWidth = 6; ctx.strokeText(f.text,f.x,f.y); ctx.fillStyle = '#fff'; ctx.fillText(f.text,f.x,f.y); ctx.restore();
       }
     }
 
     function update(dt) {
       const b = trackBounds();
-
       teams.forEach(team => {
         team.displayScore += (team.score - team.displayScore) * Math.min(1, dt * 6.8);
-
         const targetX = scoreToX(team.displayScore, b);
         team.x += (targetX - team.x) * Math.min(1, dt * 9);
-
         team.pulse *= Math.pow(0.86, dt * 60);
         team.glow *= Math.pow(0.90, dt * 60);
       });
@@ -1692,162 +1183,43 @@
 
     function draw() {
       const now = performance.now();
-      const dt = Math.min(0.05, (now - lastTime) / 1000);
-      lastTime = now;
-
+      const dt = Math.min(0.05, (now - lastTime) / 1000); lastTime = now;
       const time = now / 1000;
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-
+      const w = window.innerWidth, h = window.innerHeight;
       update(dt);
       layoutTeams(false);
-
-      drawBackground(w, h);
+      drawBackground(w,h);
       drawSpeedLines(dt);
-
-      const sortedTeams = [...teams].sort((a, b) => a.y - b.y);
-
+      const sortedTeams = [...teams].sort((a,b)=>a.y-b.y);
       sortedTeams.forEach(team => {
         drawCar(team);
         drawPersistentFrontGift(team, time);
       });
-
       drawGiftSprites(dt);
       drawParticles(dt);
       drawFloatingTexts(dt);
-
       requestAnimationFrame(draw);
     }
 
     function spawnParticles(x, y, color, count) {
       for (let i = 0; i < count; i++) {
-        const angle = Math.PI + (Math.random() - 0.5) * 1.25;
-        const speed = 0.7 + Math.random() * 3.0;
-
-        particles.push({
-          x,
-          y,
-          vx: Math.cos(angle) * speed - 1.8,
-          vy: Math.sin(angle) * speed,
-          life: 0.65 + Math.random() * 0.45,
-          maxLife: 1.1,
-          size: 2 + Math.random() * 4,
-          color
-        });
+        const angle = Math.PI + (Math.random()-0.5)*1.25;
+        const speed = 0.7 + Math.random()*3.0;
+        particles.push({x,y,vx:Math.cos(angle)*speed-1.8,vy:Math.sin(angle)*speed,life:0.65+Math.random()*0.45,maxLife:1.1,size:2+Math.random()*4,color});
       }
     }
 
-    function spawnSpeedLines(x, y, count) {
-      for (let i = 0; i < count; i++) {
-        speedLines.push({
-          x: x - Math.random() * 48,
-          y: y + (Math.random() - 0.5) * 44,
-          len: 28 + Math.random() * 48,
-          life: 0.38 + Math.random() * 0.26,
-          maxLife: 0.62
-        });
-      }
-    }
-
-    function addFloatingText(x, y, text, color) {
-      floatingTexts.push({
-        x,
-        y,
-        text,
-        color,
-        life: 1.05,
-        age: 0
-      });
-    }
-
-    function showCenterMessage(big, sub, duration) {
-      centerBig.textContent = big;
-      centerSub.textContent = sub;
-      centerMessage.classList.add('show');
-
-      clearTimeout(showCenterMessage.t);
-
-      showCenterMessage.t = setTimeout(() => {
-        centerMessage.classList.remove('show');
-      }, duration || 2600);
-    }
-
-    function easeOutCubic(t) {
-      return 1 - Math.pow(1 - t, 3);
-    }
-
-    function darkenColor(hex, amount) {
-      return mixColor(hex, '#020617', amount);
-    }
-
-    function lightenColor(hex, amount) {
-      return mixColor(hex, '#ffffff', amount);
-    }
-
-    function mixColor(hex, other, amount) {
-      const a = hexToRgb(hex);
-      const b = hexToRgb(other);
-
-      const r = Math.round(a.r + (b.r - a.r) * amount);
-      const g = Math.round(a.g + (b.g - a.g) * amount);
-      const bl = Math.round(a.b + (b.b - a.b) * amount);
-
-      return 'rgb(' + r + ', ' + g + ', ' + bl + ')';
-    }
-
-    function hexToRgb(hex) {
-      const clean = String(hex || '#ffffff').replace('#', '');
-      const bigint = parseInt(clean, 16);
-
-      return {
-        r: (bigint >> 16) & 255,
-        g: (bigint >> 8) & 255,
-        b: bigint & 255
-      };
-    }
-
-    function roundRect(ctx, x, y, w, h, r) {
-      const radius = Math.min(r, w / 2, h / 2);
-
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.arcTo(x + w, y, x + w, y + h, radius);
-      ctx.arcTo(x + w, y + h, x, y + h, radius);
-      ctx.arcTo(x, y + h, x, y, radius);
-      ctx.arcTo(x, y, x + radius, y, radius);
-      ctx.closePath();
-    }
-
-    function circle(x, y, r) {
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function star(cx, cy, outer, inner, color) {
-      ctx.save();
-
-      ctx.fillStyle = color;
-      ctx.beginPath();
-
-      for (let i = 0; i < 10; i++) {
-        const a = -Math.PI / 2 + i * Math.PI / 5;
-        const r = i % 2 === 0 ? outer : inner;
-        const x = cx + Math.cos(a) * r;
-        const y = cy + Math.sin(a) * r;
-
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-      }
-
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.restore();
-    }
+    function spawnSpeedLines(x, y, count) { for (let i=0;i<count;i++) speedLines.push({x:x-Math.random()*48,y:y+(Math.random()-0.5)*44,len:28+Math.random()*48,life:0.38+Math.random()*0.26,maxLife:0.62}); }
+    function addFloatingText(x, y, text, color) { floatingTexts.push({x,y,text,color,life:1.05,age:0}); }
+    function showCenterMessage(big, sub, duration) { centerBig.textContent = big; centerSub.textContent = sub; centerMessage.classList.add('show'); clearTimeout(showCenterMessage.t); showCenterMessage.t = setTimeout(()=>centerMessage.classList.remove('show'), duration || 2600); }
+    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+    function darkenColor(hex, amount) { return mixColor(hex, '#020617', amount); }
+    function lightenColor(hex, amount) { return mixColor(hex, '#ffffff', amount); }
+    function mixColor(hex, other, amount) { const a=hexToRgb(hex), b=hexToRgb(other); const r=Math.round(a.r+(b.r-a.r)*amount), g=Math.round(a.g+(b.g-a.g)*amount), bl=Math.round(a.b+(b.b-a.b)*amount); return 'rgb('+r+', '+g+', '+bl+')'; }
+    function hexToRgb(hex) { const clean=String(hex || '#ffffff').replace('#',''); const bigint=parseInt(clean,16); return {r:(bigint>>16)&255,g:(bigint>>8)&255,b:bigint&255}; }
+    function roundRect(ctx,x,y,w,h,r){ const radius=Math.min(r,w/2,h/2); ctx.beginPath(); ctx.moveTo(x+radius,y); ctx.arcTo(x+w,y,x+w,y+h,radius); ctx.arcTo(x+w,y+h,x,y+h,radius); ctx.arcTo(x,y+h,x,y,radius); ctx.arcTo(x,y,x+radius,y,radius); ctx.closePath(); }
+    function circle(x,y,r){ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
+    function star(cx,cy,outer,inner,color){ ctx.save(); ctx.fillStyle=color; ctx.beginPath(); for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5; const r=i%2===0?outer:inner; const x=cx+Math.cos(a)*r; const y=cy+Math.sin(a)*r; if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); } ctx.closePath(); ctx.fill(); ctx.restore(); }
 
     window.addEventListener('resize', resize);
     window.addEventListener('pointerdown', unlockAudio, { once: true });
@@ -1856,13 +1228,7 @@
     resize();
     buildControls();
     updatePanels();
-
-    showCenterMessage(
-      'Yarış Hazır!',
-      'Yorumla ülke seç: TR / AZ / SYR / AFG / TKM / KURD. Hediye o ülkeye gider.',
-      3600
-    );
-
+    showCenterMessage('Yarış Hazır!', '5 yarışı kazanan oyunun galibi olur.', 2400);
     requestAnimationFrame(draw);
   </script>
 </body>
