@@ -398,6 +398,7 @@
     let youtubeReady = false;
     let youtubePlayer = null;
     let pendingYoutubeTeamCode = null;
+    let wakeLockSentinel = null;
 
     const anthemAudio = {};
     const giftImages = {};
@@ -460,13 +461,14 @@
     const USE_YOUTUBE_MUSIC = true;
 
     const TEAM_YOUTUBE_IDS = {
-      // İnternetten çalar. Video ID'leri istersen sonradan sadece buradan değiştirirsin.
-      TR: '7VG5HU9U4QY',      // Mehter / hücum tarzı
-      KURD: 'uO5n1l2GvIc',    // Davul-zurna / halay tarzı
-      AZ: 'E-F4ct7t0kw',      // Azerbaycan enstrümantal tarzı
-      SYR: 'WDqH-fFOLvQ',     // Davul-zurna hareketli tarz
-      AFG: 'uO5n1l2GvIc',     // Geçici hareketli ritim
-      TKM: 'tayQ3owTkDE'      // Geçici hareketli ritim
+      // Marş odaklı seçimler. YouTube linkindeki "v=" sonrasındaki ID kullanılır.
+      // Seçimler yorumlarda geçen duygu/aidiyet tepkilerine ve marş hissine göre yapıldı.
+      TR: 'G9-kXqhF5NE',      // Ceddin Deden - Mehter marşı
+      KURD: 'qBzR4z8FmTE',    // Ey Reqîb - Kürt/Kürdistan milli marşı
+      AZ: 'RODcD9G27xI',      // Azerin - Çırpınırdın Karadeniz / marş hissi güçlü
+      SYR: 'bUcs7InRLMk',     // Humat ad-Diyar - Suriye milli marşı
+      AFG: 'sw21Xjdvs2g',     // Afghanistan Republic March - Afghanistan Afghanistan
+      TKM: 'gfekDDsGIJQ'      // Türkmenistan Milli Marşı
     };
 
     const TEAM_MUSIC_URLS = {
@@ -813,6 +815,20 @@
       );
     }
 
+    async function requestScreenWakeLock() {
+      if (!('wakeLock' in navigator)) return false;
+
+      try {
+        wakeLockSentinel = await navigator.wakeLock.request('screen');
+        wakeLockSentinel.addEventListener('release', () => {
+          wakeLockSentinel = null;
+        });
+        return true;
+      } catch (err) {
+        return false;
+      }
+    }
+
     async function toggleFullscreen() {
       const root = document.documentElement;
 
@@ -841,6 +857,7 @@
         showCenterMessage('Tam ekran açılamadı', 'Mobil tarayıcı izin vermediyse sayfayı ana ekrana ekleyip oradan aç.', 4200);
       }
 
+      await requestScreenWakeLock();
       updateFullscreenButton();
       setTimeout(resize, 160);
     }
@@ -872,6 +889,8 @@
 
       const btn = document.getElementById('audioUnlockBtn');
       if (btn) btn.textContent = 'Müzik Açık';
+
+      requestScreenWakeLock();
 
       if (USE_YOUTUBE_MUSIC) {
         loadYouTubeMusicPlayer();
@@ -1387,6 +1406,11 @@
     document.addEventListener('fullscreenchange', updateFullscreenButton);
     document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
     document.addEventListener('msfullscreenchange', updateFullscreenButton);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && audioUnlocked) {
+        requestScreenWakeLock();
+      }
+    });
     window.addEventListener('pointerdown', unlockAudio, { once: true });
 
     preloadAssets();
